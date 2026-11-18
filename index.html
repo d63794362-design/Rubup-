@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0f1014">
+<title>РИСКА</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+  html, body { height:100%; overflow-x:hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background:#0f1014; color:#e6e8ee; overscroll-behavior:none;
+    touch-action: manipulation; -webkit-text-size-adjust:100%;
+  }
+  ::-webkit-scrollbar { width:0; height:0; }
+  #app { max-width:520px; margin:0 auto; padding:0 12px 100px; min-height:100vh; }
+
+  /* ==== Header ==== */
+  .header {
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:14px 0 10px; position:sticky; top:0; z-index:50;
+    background:linear-gradient(#0f1014 82%, rgba(15,16,20,0));
+  }
+  .brand { font-size:22px; font-weight:900; letter-spacing:1px; color:#facc15; display:flex; align-items:center; gap:6px; }
+  .brand .dot { width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 8px #22c55e; animation:pulse 1.6s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+  .balance-box { display:flex; align-items:center; gap:6px; }
+  .balance {
+    background:#181a20; border:1px solid #262a35; border-radius:14px;
+    padding:8px 12px; font-weight:800; font-size:15px; display:flex; align-items:center; gap:5px;
+    min-width:82px; justify-content:center;
+  }
+  .balance .star { color:#facc15; }
+  .plus-btn {
+    width:34px; height:34px; border-radius:50%; border:none; background:#facc15; color:#0f1014;
+    font-size:22px; font-weight:900; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:transform .1s;
+  }
+  .plus-btn:active { transform:scale(.9); }
+  .bonus-btn {
+    background:#22c55e; color:#08130a; border:none; border-radius:12px; padding:8px 10px;
+    font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap; min-width:70px;
+  }
+  .bonus-timer {
+    background:#181a20; border:1px solid #262a35; border-radius:12px; padding:8px 10px;
+    font-size:12px; font-weight:800; color:#9aa3b5; min-width:70px; text-align:center;
+  }
+
+  /* ==== Demo banner ==== */
+  .demo-banner {
+    background:linear-gradient(135deg,#2a2007,#1b1709); border:1px solid #facc15;
+    border-radius:14px; padding:10px 12px; display:flex; align-items:flex-start; gap:10px;
+    margin-bottom:12px; font-size:12.5px; line-height:1.4; color:#fde68a;
+  }
+  .demo-banner button {
+    background:transparent; border:none; color:#facc15; font-size:16px; font-weight:900;
+    cursor:pointer; padding:0 2px; line-height:1;
+  }
+
+  /* ==== Online bar ==== */
+  .online-bar {
+    display:flex; align-items:center; gap:6px; font-size:12px; color:#22c55e; font-weight:700;
+    margin-bottom:12px;
+  }
+  .online-bar .dot { width:7px; height:7px; border-radius:50%; background:#22c55e; box-shadow:0 0 6px #22c55e; animation:pulse 1.6s infinite; }
+
+  /* ==== Cards / grid ==== */
+  .section-title { font-size:13px; font-weight:800; color:#9aa3b5; text-transform:uppercase; letter-spacing:.6px; margin:16px 0 8px; }
+
+  .games-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .game-card {
+    background:#181a20; border:1px solid #262a35; border-radius:16px; padding:14px 12px;
+    display:flex; flex-direction:column; gap:6px; cursor:pointer; transition:transform .1s, border-color .15s;
+    position:relative; overflow:hidden;
+  }
+  .game-card:active { transform:scale(.97); }
+  .game-card.active { border-color:#facc15; }
+  .game-card .ico { font-size:26px; }
+  .game-card .nm { font-size:14px; font-weight:800; color:#e6e8ee; }
+  .game-card .sub { font-size:11px; color:#7c8699; font-weight:600; }
+  .game-card .badge { position:absolute; top:8px; right:8px; font-size:9px; font-weight:900; color:#0f1014; background:#facc15; border-radius:6px; padding:2px 5px; }
+
+  /* ==== Live feed ==== */
+  .feed { background:#181a20; border:1px solid #262a35; border-radius:16px; padding:10px 12px; max-height:150px; overflow-y:auto; }
+  .feed-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; font-size:12px; border-bottom:1px solid #20232c; }
+  .feed-row:last-child { border-bottom:none; }
+  .feed-row .who { color:#9aa3b5; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%; }
+  .feed-row .amt { font-weight:800; }
+  .amt.win { color:#22c55e; }
+  .amt.lose { color:#ef4444; }
+
+  /* ==== Top players ==== */
+  .top-list { background:#181a20; border:1px solid #262a35; border-radius:16px; padding:8px 12px; }
+  .top-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid #20232c; font-size:13px; }
+  .top-row:last-child { border-bottom:none; }
+  .top-row .rank { width:20px; font-weight:900; color:#facc15; }
+  .top-row .nm { flex:1; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .top-row .bal { font-weight:800; color:#facc15; font-size:12px; }
+  .top-row.me { background:linear-gradient(90deg,rgba(250,204,21,.08),transparent); border-radius:8px; }
+
+  /* ==== Buttons ==== */
+  .btn {
+    border:none; border-radius:14px; padding:14px; font-size:15px; font-weight:800;
+    cursor:pointer; width:100%; transition:transform .1s, opacity .2s;
+  }
+  .btn:active { transform:scale(.97); }
+  .btn:disabled { opacity:.4; cursor:not-allowed; }
+  .btn-yellow { background:#facc15; color:#0f1014; }
+  .btn-green { background:#22c55e; color:#08130a; }
+  .btn-red { background:#ef4444; color:#fff; }
+  .btn-dark { background:#22252f; color:#e6e8ee; border:1px solid #33384a; }
+  .btn-sm { padding:9px 12px; font-size:13px; border-radius:11px; width:auto; }
+
+  /* ==== Play screen ==== */
+  .screen { display:none; }
+  .screen.active { display:block; animation:fade .2s; }
+  @keyframes fade { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+  .play-head { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .back-btn {
+    width:38px; height:38px; border-radius:12px; background:#181a20; border:1px solid #262a35;
+    color:#e6e8ee; font-size:18px; font-weight:900; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .play-title { font-size:18px; font-weight:900; }
+
+  .panel { background:#181a20; border:1px solid #262a35; border-radius:16px; padding:14px; margin-bottom:12px; }
+  .panel-label { font-size:11px; font-weight:800; color:#7c8699; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+
+  .bet-row { display:flex; gap:8px; align-items:center; }
+  .bet-input {
+    flex:1; background:#0f1014; border:1px solid #33384a; border-radius:12px; padding:12px;
+    color:#e6e8ee; font-size:16px; font-weight:800; text-align:center; outline:none;
+    -moz-appearance:textfield;
+  }
+  .bet-input::-webkit-outer-spin-button, .bet-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+  .chip {
+    background:#22252f; border:1px solid #33384a; color:#e6e8ee; border-radius:10px;
+    padding:9px 10px; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap;
+  }
+  .chip:active { background:#2c3040; }
+
+  canvas { width:100%; display:block; border-radius:14px; background:#0b0c10; touch-action:none; }
+
+  .mult-big { font-size:42px; font-weight:900; text-align:center; color:#facc15; letter-spacing:-1px; }
+  .status-txt { text-align:center; font-size:13px; font-weight:700; color:#9aa3b5; margin-top:4px; }
+  .status-txt.win { color:#22c55e; }
+  .status-txt.lose { color:#ef4444; }
+
+  /* Roulette */
+  .roulette-wheel { display:flex; height:90px; border-radius:14px; overflow:hidden; margin-bottom:10px; border:2px solid #262a35; }
+  .rw-seg { flex:1; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; }
+  .rw-red { background:#ef4444; color:#fff; }
+  .rw-black { background:#1c1f28; color:#fff; }
+  .rw-zero { background:#22c55e; color:#08130a; flex:0 0 30%; }
+  .rw-marker { position:relative; height:0; }
+  .rw-marker::after { content:''; position:absolute; top:-92px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:9px solid transparent; border-right:9px solid transparent; border-top:12px solid #facc15; transition:left .1s linear; }
+  .roul-result { text-align:center; font-size:34px; font-weight:900; margin:12px 0; }
+
+  /* Mines */
+  .mines-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:7px; margin-bottom:12px; }
+  .mine-cell {
+    aspect-ratio:1; background:#22252f; border:1px solid #33384a; border-radius:11px;
+    display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer;
+    transition:transform .1s, background .15s;
+  }
+  .mine-cell:active { transform:scale(.94); }
+  .mine-cell.opened { background:#1a2c1e; border-color:#22c55e; }
+  .mine-cell.bomb { background:#2c1a1a; border-color:#ef4444; }
+  .mine-cell.disabled { pointer-events:none; opacity:.65; }
+
+  /* Cases */
+  .cases-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+  .case-item { background:#181a20; border:1px solid #262a35; border-radius:16px; padding:16px 12px; text-align:center; cursor:pointer; transition:transform .1s; }
+  .case-item:active { transform:scale(.97); }
+  .case-item .ci-ico { font-size:40px; margin-bottom:8px; }
+  .case-item .ci-nm { font-size:13px; font-weight:800; margin-bottom:4px; }
+  .case-item .ci-pr { font-size:11px; color:#7c8699; font-weight:600; }
+  .case-reel { background:#0b0c10; border:1px solid #262a35; border-radius:14px; padding:16px; text-align:center; }
+  .case-win { font-size:38px; font-weight:900; color:#facc15; }
+
+  /* Plinko */
+  .plinko-drop { display:flex; gap:8px; margin-bottom:12px; }
+  .plinko-buckets { display:flex; gap:3px; }
+  .pb { flex:1; text-align:center; padding:8px 0; border-radius:8px; font-size:10px; font-weight:900; background:#22252f; color:#9aa3b5; }
+  .pb.hot { background:#3a2a05; color:#facc15; }
+
+  /* Modal */
+  .modal-bg {
+    position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:200;
+    display:none; align-items:center; justify-content:center; padding:20px;
+    backdrop-filter:blur(4px);
+  }
+  .modal-bg.show { display:flex; }
+  .modal {
+    background:#181a20; border:1px solid #262a35; border-radius:20px; padding:22px;
+    max-width:340px; width:100%; text-align:center; animation:pop .25s;
+  }
+  @keyframes pop { from{transform:scale(.85);opacity:0} to{transform:none;opacity:1} }
+  .modal .m-ico { font-size:48px; margin-bottom:10px; }
+  .modal .m-txt { font-size:17px; font-weight:800; margin-bottom:6px; }
+  .modal .m-sub { font-size:13px; color:#9aa3b5; margin-bottom:16px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== Header ===== -->
+  <div class="header">
+    <div class="brand"><span class="dot"></span>РИСКА</div>
+    <div class="balance-box">
+      <div class="balance"><span class="star">⭐</span><span id="balVal">100</span></div>
+      <button class="plus-btn" id="plusBtn">+</button>
+      <div id="bonusSlot"></div>
+    </div>
+  </div>
+
+  <!-- ===== Demo banner ===== -->
+  <div class="demo-banner" id="demoBanner">
+    <div style="flex:1">Внимание: Это демо-режим. Пополнения и вывода средств здесь нет.</div>
+    <button id="demoClose">✕</button>
+  </div>
+
+  <!-- ===== HOME SCREEN ===== -->
+  <div class="screen active" id="screen-home">
+    <div class="online-bar"><span class="dot"></span>🟢 Онлайн: <span id="onlineCount">0</span></div>
+
+    <div class="section-title">Игры</div>
+    <div class="games-grid" id="gamesGrid"></div>
+
+    <div class="section-title">Прямой эфир выигрышей</div>
+    <div class="feed" id="liveFeed"></div>
+
+    <div class="section-title">Топ игроков</div>
+    <div class="top-list" id="topList"></div>
+  </div>
+
+  <!-- ===== PLAY SCREENS ===== -->
+  <div class="screen" id="screen-play">
+    <div class="play-head">
+      <button class="back-btn" id="backBtn">←</button>
+      <div class="play-title" id="playTitle">Игра</div>
+    </div>
+    <div id="playBody"></div>
+  </div>
+
+</div>
+
+<!-- ===== Modal ===== -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="m-ico" id="mIco">⭐</div>
+    <div class="m-txt" id="mTxt">Готово</div>
+    <div class="m-sub" id="mSub"></div>
+    <button class="btn btn-yellow" id="mClose">ОК</button>
+  </div>
+</div>
+
+<!-- SCRIPT PLACEHOLDER — replaced in Part 2 -->
+<script>
+"use strict";
+
+/* ============================================================
+   СОСТОЯНИЕ
+============================================================ */
+var LS_KEY = "riska_state_v1";
+var state = {
+  balance: 100,
+  tgUser: null,
+  demoDismissed: false,
+  topPlayers: [],
+  feed: [],
+  bonusReadyAt: 0
+};
+
+function loadState() {
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      var s = JSON.parse(raw);
+      if (typeof s.balance === "number") state.balance = s.balance;
+      if (s.demoDismissed) state.demoDismissed = true;
+      if (s.bonusReadyAt) state.bonusReadyAt = s.bonusReadyAt;
+      if (Array.isArray(s.topPlayers)) state.topPlayers = s.topPlayers;
+      if (Array.isArray(s.feed)) state.feed = s.feed;
+    }
+  } catch (e) {}
+}
+function saveState() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      balance: state.balance,
+      demoDismissed: state.demoDismissed,
+      bonusReadyAt: state.bonusReadyAt,
+      topPlayers: state.topPlayers,
+      feed: state.feed
+    }));
+  } catch (e) {}
+}
+
+/* ============================================================
+   TELEGRAM
+============================================================ */
+var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+function initTg() {
+  if (!tg) return;
+  try {
+    tg.ready();
+    tg.expand();
+    if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+  } catch (e) {}
+  var u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+  if (u) {
+    state.tgUser = {
+      id: u.id,
+      name: ((u.first_name || "") + (u.last_name ? " " + u.last_name : "")).trim() || u.username || "Игрок"
+    };
+  }
+}
+function myName() {
+  return state.tgUser ? state.tgUser.name : "Вы";
+}
+function myId() {
+  return state.tgUser ? state.tgUser.id : 0;
+}
+
+/* ============================================================
+   УТИЛИТЫ
+============================================================ */
+function $(id) { return document.getElementById(id); }
+function rand(a, b) { return a + Math.random() * (b - a); }
+function randInt(a, b) { return Math.floor(rand(a, b + 1)); }
+function fmt(n) {
+  n = Math.round(n * 100) / 100;
+  if (Math.abs(n) >= 1000) return n.toLocaleString("ru-RU");
+  return String(n);
+}
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+function setBalance(v) {
+  state.balance = Math.max(0, Math.round(v * 100) / 100);
+  $("balVal").textContent = fmt(state.balance);
+  saveState();
+}
+function addBalance(v) { setBalance(state.balance + v); }
+
+function canBet(amount) {
+  amount = Number(amount);
+  if (isNaN(amount) || amount < 1) { toast("Минимальная ставка — 1 ⭐", "⚠️", "Ставка должна быть не меньше 1 звезды."); return false; }
+  if (amount > state.balance) { toast("Недостаточно звёзд", "❌", "На балансе: " + fmt(state.balance) + " ⭐"); return false; }
+  return true;
+}
+
+/* ============================================================
+   МОДАЛКА / ТОСТ
+============================================================ */
+function toast(title, ico, sub) {
+  $("mIco").textContent = ico || "⭐";
+  $("mTxt").textContent = title || "";
+  $("mSub").textContent = sub || "";
+  $("modalBg").classList.add("show");
+}
+$("mClose").onclick = function () { $("modalBg").classList.remove("show"); };
+$("modalBg").onclick = function (e) { if (e.target === $("modalBg")) $("modalBg").classList.remove("show"); };
+
+/* ============================================================
+   ЛЕНТА ВЫИГРЫШЕЙ / ТОП
+============================================================ */
+var FAKE_NAMES = ["NeonFox","StarLord","LuckyDuck","MrBoom","Rocket_88","GoldRush","Kosmo","TigerBet","NightOwl","TurboMax","AlphaWolf","Zvezda","Viking","PandaX","Sniper"];
+function seedSocial() {
+  if (state.topPlayers.length === 0) {
+    var arr = [];
+    for (var i = 0; i < 8; i++) {
+      arr.push({ id: -i - 1, name: FAKE_NAMES[i % FAKE_NAMES.length], bal: randInt(120, 4800) });
+    }
+    state.topPlayers = arr;
+  }
+  if (state.feed.length === 0) {
+    for (var j = 0; j < 6; j++) pushFakeFeed();
+  }
+  saveState();
+}
+function pushFakeFeed() {
+  var nm = FAKE_NAMES[randInt(0, FAKE_NAMES.length - 1)];
+  var win = Math.random() > 0.35;
+  var amt = randInt(2, 300);
+  state.feed.unshift({ name: nm, amount: win ? amt : -amt, win: win, t: Date.now() });
+  if (state.feed.length > 18) state.feed.length = 18;
+}
+function pushMyFeed(amount, win) {
+  state.feed.unshift({ name: myName(), amount: win ? amount : -amount, win: win, t: Date.now(), me: true });
+  if (state.feed.length > 18) state.feed.length = 18;
+  renderFeed();
+}
+function renderFeed() {
+  var el = $("liveFeed");
+  var html = "";
+  for (var i = 0; i < state.feed.length; i++) {
+    var f = state.feed[i];
+    var cls = f.win ? "win" : "lose";
+    var sign = f.win ? "+" : "";
+    html += '<div class="feed-row"><span class="who">' + esc(f.name) + '</span><span class="amt ' + cls + '">' + sign + fmt(f.amount) + ' ⭐</span></div>';
+  }
+  el.innerHTML = html;
+}
+function renderTop() {
+  var all = state.topPlayers.slice();
+  var me = { id: myId(), name: myName(), bal: state.balance, me: true };
+  all.push(me);
+  all.sort(function (a, b) { return b.bal - a.bal; });
+  var html = "";
+  for (var i = 0; i < Math.min(8, all.length); i++) {
+    var p = all[i];
+    var isMe = p.id === myId() && p.name === myName();
+    html += '<div class="top-row' + (isMe ? " me" : "") + '"><span class="rank">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="bal">' + fmt(p.bal) + ' ⭐</span></div>';
+  }
+  $("topList").innerHTML = html;
+}
+
+/* ============================================================
+   ОНЛАЙН-СЧЁТЧИК
+============================================================ */
+var onlineBase = 0;
+function initOnline() {
+  var seed = Math.floor(Date.now() / 60000);
+  onlineBase = 200 + (seed % 380);
+  updateOnline();
+  setInterval(updateOnline, 4000);
+}
+function updateOnline() {
+  var t = Math.floor(Date.now() / 4000);
+  var n = onlineBase + ((t * 37) % 120) - 40;
+  if (n < 60) n = 60;
+  $("onlineCount").textContent = n;
+}
+
+/* ============================================================
+   БОНУС / ТАЙМЕР / +100
+============================================================ */
+var BONUS_WAIT = 60000;
+function renderBonus() {
+  var slot = $("bonusSlot");
+  var now = Date.now();
+  if (state.bonusReadyAt > now) {
+    var left = Math.ceil((state.bonusReadyAt - now) / 1000);
+    slot.innerHTML = '<div class="bonus-timer" id="bonusTimer">⏳ ' + left + 'с</div>';
+  } else {
+    slot.innerHTML = '<button class="bonus-btn" id="bonusBtn">🎁 +50 ⭐</button>';
+    $("bonusBtn").onclick = claimBonus;
+  }
+}
+function claimBonus() {
+  addBalance(50);
+  pushMyFeed(50, true);
+  state.bonusReadyAt = Date.now() + BONUS_WAIT;
+  saveState();
+  renderBonus();
+  renderTop();
+  toast("Бонус получен!", "🎁", "+50 ⭐ зачислено на баланс.");
+}
+setInterval(function () {
+  if (state.bonusReadyAt > Date.now()) {
+    var el = $("bonusTimer");
+    if (el) {
+      var left = Math.ceil((state.bonusReadyAt - Date.now()) / 1000);
+      if (left <= 0) renderBonus();
+      else el.textContent = "⏳ " + left + "с";
+    }
+  }
+}, 500);
+
+$("plusBtn").onclick = function () {
+  addBalance(100);
+  renderTop();
+  toast("Пополнено", "⭐", "+100 ⭐ начислено.");
+};
+
+/* ============================================================
+   DEMO BANNER
+============================================================ */
+function initDemo() {
+  if (state.demoDismissed) {
+    $("demoBanner").style.display = "none";
+    return;
+  }
+  $("demoClose").onclick = function () {
+    state.demoDismissed = true;
+    saveState();
+    $("demoBanner").style.display = "none";
+  };
+}
+
+/* ============================================================
+   РОУТЕР ЭКРАНОВ
+============================================================ */
+var currentGame = null;
+var gameCleanup = null;
+
+function showHome() {
+  if (gameCleanup) { gameCleanup(); gameCleanup = null; }
+  currentGame = null;
+  $("screen-play").classList.remove("active");
+  $("screen-home").classList.add("active");
+  renderTop();
+  renderFeed();
+}
+function openGame(id) {
+  currentGame = id;
+  $("screen-home").classList.remove("active");
+  $("screen-play").classList.add("active");
+  var meta = GAMES[id];
+  $("playTitle").textContent = meta.name;
+  $("playBody").innerHTML = "";
+  if (gameCleanup) { gameCleanup(); gameCleanup = null; }
+  gameCleanup = meta.render($("playBody")) || null;
+  window.scrollTo(0, 0);
+}
+$("backBtn").onclick = showHome;
+
+/* ============================================================
+   СПИСОК ИГР
+============================================================ */
+var GAMES = {
+  crash:   { name: "Ракетка Live", ico: "🚀", sub: "Успей забрать", badge: "LIVE", render: renderCrash },
+  roulette:{ name: "Рулетка Live", ico: "🎡", sub: "Красное/Чёрное", badge: "LIVE", render: renderRoulette },
+  claw:    { name: "Клешня", ico: "🦾", sub: "Призы до x10", render: renderClaw },
+  plane:   { name: "Самолёт", ico: "✈️", sub: "Взлёт и посадка", render: renderPlane },
+  cow:     { name: "Корова на дороге", ico: "🐄", sub: "5 полос", render: renderCow },
+  cases:   { name: "Кейсы", ico: "🎁", sub: "От 1 ⭐", render: renderCases },
+  mines:   { name: "Мины", ico: "💣", sub: "5x5, 5 бомб", render: renderMines },
+  upgrade: { name: "Апгрейд", ico: "⬆️", sub: "x1.5 / x2 / x5", render: renderUpgrade },
+  plinko:  { name: "Плинко", ico: "🔵", sub: "x0.2 – x5", render: renderPlinko },
+  dice:    { name: "Арена", ico: "🎲", sub: "50/50 x2", render: renderDice }
+};
+
+function buildGamesGrid() {
+  var order = ["crash","roulette","claw","plane","cow","cases","mines","upgrade","plinko","dice"];
+  var html = "";
+  for (var i = 0; i < order.length; i++) {
+    var id = order[i];
+    var g = GAMES[id];
+    html += '<div class="game-card" data-game="' + id + '">' +
+      (g.badge ? '<span class="badge">' + g.badge + '</span>' : '') +
+      '<div class="ico">' + g.ico + '</div>' +
+      '<div class="nm">' + g.name + '</div>' +
+      '<div class="sub">' + g.sub + '</div>' +
+      '</div>';
+  }
+  $("gamesGrid").innerHTML = html;
+  var cards = $("gamesGrid").querySelectorAll(".game-card");
+  for (var k = 0; k < cards.length; k++) {
+    cards[k].onclick = function () { openGame(this.getAttribute("data-game")); };
+  }
+}
+
+/* ============================================================
+   ОБЩИЙ ПОМОЩНИК: ПАНЕЛЬ СТАВКИ
+============================================================ */
+function betPanelHTML(defaultBet) {
+  var d = defaultBet || 10;
+  return '<div class="panel">' +
+    '<div class="panel-label">Ставка (⭐)</div>' +
+    '<div class="bet-row">' +
+    '<input type="number" class="bet-input" id="betInput" value="' + d + '" min="1" step="1">' +
+    '<button class="chip" data-chip="5">5</button>' +
+    '<button class="chip" data-chip="25">25</button>' +
+    '<button class="chip" data-chip="100">100</button>' +
+    '<button class="chip" data-chip="max">MAX</button>' +
+    '</div></div>';
+}
+function wireBetChips(root) {
+  var inp = root.querySelector("#betInput");
+  var chips = root.querySelectorAll(".chip[data-chip]");
+  for (var i = 0; i < chips.length; i++) {
+    chips[i].onclick = function () {
+      var v = this.getAttribute("data-chip");
+      if (v === "max") inp.value = Math.floor(state.balance);
+      else inp.value = v;
+    };
+  }
+  return inp;
+}
+function readBet(inp) {
+  var v = parseFloat(inp.value);
+  if (isNaN(v) || v < 1) v = 1;
+  v = Math.floor(v);
+  inp.value = v;
+  return v;
+}
+
+/* ============================================================
+   1. РАКЕТКА LIVE (CRASH)
+============================================================ */
+function renderCrash(root) {
+  root.innerHTML =
+    betPanelHTML(10) +
+    '<div class="panel">' +
+    '<div class="mult-big" id="crashMult">1.00x</div>' +
+    '<div class="status-txt" id="crashStatus">Ожидание раунда...</div>' +
+    '<canvas id="crashCanvas" width="600" height="300" style="margin-top:10px"></canvas>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px">' +
+    '<button class="btn btn-green" id="crashBet" style="flex:1">Поставить</button>' +
+    '<button class="btn btn-yellow" id="crashCash" style="flex:1" disabled>Забрать</button>' +
+    '</div>';
+
+  var inp = wireBetChips(root);
+  var canvas = root.querySelector("#crashCanvas");
+  var ctx = canvas.getContext("2d");
+  var multEl = root.querySelector("#crashMult");
+  var statusEl = root.querySelector("#crashStatus");
+  var betBtn = root.querySelector("#crashBet");
+  var cashBtn = root.querySelector("#crashCash");
+
+  var betAmount = 0;
+  var inRound = false;
+  var running = false;
+  var crashed = false;
+  var mult = 1.0;
+  var crashAt = 0;
+  var raf = 0;
+  var pollTimer = 0;
+
+  // Синхронизация: раунд 12с + пауза 4с
+  var ROUND_MS = 12000, PAUSE_MS = 4000, CYCLE = ROUND_MS + PAUSE_MS;
+
+  function cycleInfo() {
+    var t = Date.now();
+    var pos = t % CYCLE;
+    if (pos < ROUND_MS) return { phase: "run", progress: pos / ROUND_MS, remaining: ROUND_MS - pos };
+    return { phase: "pause", progress: 0, remaining: CYCLE - pos };
+  }
+  function cycleSeed() { return Math.floor(Date.now() / CYCLE); }
+
+  function drawGraph() {
+    var w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    // сетка
+    ctx.strokeStyle = "#1d2028"; ctx.lineWidth = 1;
+    for (var i = 1; i < 5; i++) {
+      ctx.beginPath(); ctx.moveTo(0, h * i / 5); ctx.lineTo(w, h * i / 5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(w * i / 5, 0); ctx.lineTo(w * i / 5, h); ctx.stroke();
+    }
+    if (mult > 1.001) {
+      var prog = Math.min(1, (mult - 1) / 4);
+      ctx.strokeStyle = crashed ? "#ef4444" : "#facc15";
+      ctx.lineWidth = 4; ctx.beginPath();
+      var steps = 50;
+      for (var s = 0; s <= steps * prog; s++) {
+        var x = (s / steps) * w;
+        var y = h - Math.pow(s / steps, 0.6) * (h * 0.85) * prog;
+        if (s === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.fillStyle = crashed ? "#ef4444" : "#facc15";
+      var lx = w * prog, ly = h - Math.pow(prog, 0.6) * (h * 0.85) * prog;
+      ctx.beginPath(); ctx.arc(lx, ly, 8, 0, 7); ctx.fill();
+    }
+  }
+
+  function startRound() {
+    if (running) return;
+    crashed = false;
+    inRound = betAmount > 0;
+    if (!inRound) {
+      statusEl.textContent = "Раунд идёт — ставка недоступна";
+      statusEl.className = "status-txt";
+      return;
+    }
+    running = true;
+    mult = 1.0;
+    // детерминированный краш по seed + личная вариация
+    var seed = cycleSeed();
+    var r = Math.abs(Math.sin(seed * 12.9898 + (myId() % 100) * 0.0001) * 43758.5453) % 1;
+    crashAt = 1.1 + Math.pow(r, 1.8) * 6.5; // от 1.1x до ~7x
+    statusEl.textContent = "Летим! Нажми «Забрать»";
+    statusEl.className = "status-txt";
+    cashBtn.disabled = false;
+    betBtn.disabled = true;
+  }
+
+  function crashRound() {
+    if (!running) return;
+    running = false;
+    crashed = true;
+    cashBtn.disabled = true;
+    betBtn.disabled = false;
+    if (inRound) {
+      statusEl.textContent = "💥 Взрыв на " + mult.toFixed(2) + "x — ставка потеряна";
+      statusEl.className = "status-txt lose";
+      pushMyFeed(betAmount, false);
+      inRound = false;
+    } else {
+      statusEl.textContent = "💥 Взрыв на " + mult.toFixed(2) + "x";
+      statusEl.className = "status-txt lose";
+    }
+    betAmount = 0;
+    renderTop();
+  }
+
+  function loop() {
+    var info = cycleInfo();
+    if (info.phase === "run") {
+      if (!running && !crashed) startRound();
+      if (running) {
+        // рост множителя
+        var elapsed = ROUND_MS - info.remaining;
+        mult = 1.0 + Math.pow(elapsed / 1000, 1.35) * 0.55;
+        if (mult >= crashAt) { mult = crashAt; crashRound(); }
+        multEl.textContent = mult.toFixed(2) + "x";
+        multEl.style.color = crashed ? "#ef4444" : "#facc15";
+      }
+    } else {
+      if (running) { running = false; }
+      if (!crashed) {
+        crashed = true;
+        if (inRound) { pushMyFeed(betAmount, false); inRound = false; }
+      }
+      var secs = Math.ceil(info.remaining / 1000);
+      statusEl.textContent = "Новый раунд через " + secs + "с";
+      statusEl.className = "status-txt";
+      multEl.textContent = "—";
+      betBtn.disabled = false;
+      cashBtn.disabled = true;
+      betAmount = 0;
+      // сброс на старт цикла
+      if (info.remaining <= 0.05) crashed = false;
+    }
+    drawGraph();
+    raf = requestAnimationFrame(loop);
+  }
+
+  betBtn.onclick = function () {
+    var info = cycleInfo();
+    if (info.phase === "run") { toast("Раунд уже идёт", "⏳", "Дождитесь следующего раунда."); return; }
+    var amt = readBet(inp);
+    if (!canBet(amt)) return;
+    addBalance(-amt);
+    betAmount = amt;
+    crashed = false;
+    statusEl.textContent = "Ставка принята. Ждём старт...";
+    statusEl.className = "status-txt";
+    toast("Ставка принята", "🚀", "Ставка: " + amt + " ⭐");
+  };
+
+  cashBtn.onclick = function () {
+    if (!running || !inRound) return;
+    var win = Math.round(betAmount * mult);
+    addBalance(win);
+    pushMyFeed(win, true);
+    pushMyFeed(betAmount, false);
+    statusEl.textContent = "✅ Забрали на " + mult.toFixed(2) + "x: +" + fmt(win) + " ⭐";
+    statusEl.className = "status-txt win";
+    inRound = false; running = false;
+    cashBtn.disabled = true; betBtn.disabled = false;
+    renderTop();
+    toast("Выигрыш!", "💰", "+" + fmt(win) + " ⭐ (x" + mult.toFixed(2) + ")");
+  };
+
+  loop();
+  return function () { cancelAnimationFrame(raf); };
+}
+
+/* ============================================================
+   2. РУЛЕТКА LIVE
+============================================================ */
+function renderRoulette(root) {
+  root.innerHTML =
+    betPanelHTML(10) +
+    '<div class="panel">' +
+    '<div class="roulette-wheel">' +
+    '<div class="rw-seg rw-red">КРАСНОЕ x2</div>' +
+    '<div class="rw-seg rw-zero">0 x14</div>' +
+    '<div class="rw-seg rw-black">ЧЁРНОЕ x2</div>' +
+    '</div>' +
+    '<div class="roul-result" id="roulResult">—</div>' +
+    '<div class="status-txt" id="roulStatus">Ожидание...</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:8px">' +
+    '<button class="btn btn-red" id="betRed" style="flex:1">Красное x2</button>' +
+    '<button class="btn btn-dark" id="betBlack" style="flex:1">Чёрное x2</button>' +
+    '<button class="btn btn-green" id="betZero" style="flex:1">Зеро x14</button>' +
+    '</div>';
+
+  var inp = wireBetChips(root);
+  var resEl = root.querySelector("#roulResult");
+  var statusEl = root.querySelector("#roulStatus");
+  var betBtns = [root.querySelector("#betRed"), root.querySelector("#betBlack"), root.querySelector("#betZero")];
+
+  var ROUND_MS = 15000, PAUSE_MS = 3000, CYCLE = ROUND_MS + PAUSE_MS;
+  var myBetType = null, myBetAmount = 0;
+  var raf = 0, lastCycle = -1;
+  var spinDone = false;
+
+  function cycleInfo() {
+    var pos = Date.now() % CYCLE;
+    if (pos < ROUND_MS) return { phase: "run", remaining: ROUND_MS - pos };
+    return { phase: "pause", remaining: CYCLE - pos };
+  }
+  function cycleSeed() { return Math.floor(Date.now() / CYCLE); }
+
+  function setBtns(on) { for (var i = 0; i < betBtns.length; i++) betBtns[i].disabled = !on; }
+
+  function loop() {
+    var info = cycleInfo();
+    var cyc = cycleSeed();
+    if (cyc !== lastCycle) {
+      lastCycle = cyc;
+      spinDone = false;
+      myBetType = null; myBetAmount = 0;
+      resEl.textContent = "—"; resEl.style.color = "#facc15";
+      setBtns(true);
+    }
+    if (info.phase === "run") {
+      if (!spinDone) {
+        statusEl.textContent = "Раунд: " + Math.ceil(info.remaining / 1000) + "с — делайте ставку";
+        statusEl.className = "status-txt";
+      }
+    } else {
+      setBtns(false);
+      if (!spinDone) {
+        spinDone = true;
+        // определяем результат по seed
+        var r = Math.abs(Math.sin(cyc * 7.919 + 0.5) * 43758.5453) % 1;
+        var color;
+        if (r < 0.03) color = "zero";
+        else if (r < 0.515) color = "red";
+        else color = "black";
+        var showTxt, col;
+        if (color === "red") { showTxt = "🔴 КРАСНОЕ"; col = "#ef4444"; }
+        else if (color === "black") { showTxt = "⚫ ЧЁРНОЕ"; col = "#e6e8ee"; }
+        else { showTxt = "🟢 ЗЕРО"; col = "#22c55e"; }
+        resEl.textContent = showTxt; resEl.style.color = col;
+        if (myBetType) {
+          var win = (myBetType === color);
+          if (win) {
+            var mult = color === "zero" ? 14 : 2;
+            var payout = myBetAmount * mult;
+            addBalance(payout);
+            pushMyFeed(payout, true); pushMyFeed(myBetAmount, false);
+            statusEl.textContent = "✅ Выигрыш +" + fmt(payout) + " ⭐ (x" + mult + ")";
+            statusEl.className = "status-txt win";
+            toast("Победа!", "🎉", "+" + fmt(payout) + " ⭐");
+          } else {
+            pushMyFeed(myBetAmount, false);
+            statusEl.textContent = "❌ Не угадали — ставка потеряна";
+            statusEl.className = "status-txt lose";
+          }
+          renderTop();
+          myBetType = null; myBetAmount = 0;
+        } else {
+          statusEl.textContent = "Ставок не было. Новый раунд...";
+          statusEl.className = "status-txt";
+        }
+      }
+    }
+    raf = requestAnimationFrame(loop);
+  }
+
+  function placeBet(type) {
+    var info = cycleInfo();
+    if (info.phase !== "run") { toast("Раунд уже идёт", "⏳", "Дождитесь следующего."); return; }
+    if (myBetType) { toast("Ставка уже сделана", "🎯", "Одна ставка на раунд."); return; }
+    var amt = readBet(inp);
+    if (!canBet(amt)) return;
+    addBalance(-amt);
+    myBetType = type; myBetAmount = amt;
+    setBtns(false);
+    var names = { red: "Красное", black: "Чёрное", zero: "Зеро" };
+    statusEl.textContent = "Ставка: " + names[type] + " — " + amt + " ⭐";
+    statusEl.className = "status-txt";
+  }
+
+  betBtns[0].onclick = function () { placeBet("red"); };
+  betBtns[1].onclick = function () { placeBet("black"); };
+  betBtns[2].onclick = function () { placeBet("zero"); };
+
+  loop();
+  return function () { cancelAnimationFrame(raf); };
+}
+
+/* ============================================================
+   3. КЛЕШНЯ
+============================================================ */
+function renderClaw(root) {
+  root.innerHTML =
+    betPanelHTML(10) +
+    '<div class="panel">' +
+    '<canvas id="clawCanvas" width="600" height="420"></canvas>' +
+    '<div class="status-txt" id="clawStatus" style="margin-top:10px">Нажмите «Опустить», чтобы поймать приз</div>' +
+    '</div>' +
+    '<button class="btn btn-yellow" id="clawDrop">Опустить клешню (15 ⭐)</button>';
+
+  var inp = wireBetChips(root);
+  var canvas = root.querySelector("#clawCanvas");
+  var ctx = canvas.getContext("2d");
+  var statusEl = root.querySelector("#clawStatus");
+  var dropBtn = root.querySelector("#clawDrop");
+
+  var clawX = canvas.width / 2;
+  var clawY = 40;
+  var state2 = "idle"; // idle, down, up, done
+  var prizes = [];
+  var captured = null;
+  var raf = 0;
+  var targetY = 0;
+  var prizeMult = 0;
+  var betAmt = 0;
+
+  function initPrizes() {
+    prizes = [];
+    for (var i = 0; i < 5; i++) {
+      prizes.push({
+        x: 80 + i * 105,
+        y: 340 + randInt(-15, 15),
+        r: 22,
+        mult: [1.5, 2, 2.5, 3, 5, 10][randInt(0, 5)],
+        color: ["#facc15", "#22c55e", "#ef4444", "#3b82f6", "#a855f7"][randInt(0, 4)]
+      });
+    }
+  }
+  initPrizes();
+
+  function draw() {
+    var w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    // фон
+    ctx.fillStyle = "#0b0c10"; ctx.fillRect(0, 0, w, h);
+    // пол
+    ctx.fillStyle = "#1a1e28"; ctx.fillRect(0, h - 70, w, 70);
+    // призы
+    for (var i = 0; i < prizes.length; i++) {
+      var p = prizes[i];
+      if (p.taken) continue;
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+      ctx.fillStyle = "#0f1014"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("x" + p.mult, p.x, p.y);
+    }
+    // трос
+    ctx.strokeStyle = "#9aa3b5"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(clawX, 0); ctx.lineTo(clawX, clawY - 20); ctx.stroke();
+    // клешня
+    ctx.fillStyle = "#e6e8ee";
+    ctx.fillRect(clawX - 30, clawY - 20, 60, 20);
+    ctx.beginPath();
+    ctx.moveTo(clawX - 30, clawY);
+    ctx.lineTo(clawX - 15, clawY + 25);
+    ctx.lineTo(clawX - 5, clawY + 25);
+    ctx.lineTo(clawX - 15, clawY);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(clawX + 30, clawY);
+    ctx.lineTo(clawX + 15, clawY + 25);
+    ctx.lineTo(clawX + 5, clawY + 25);
+    ctx.lineTo(clawX + 15, clawY);
+    ctx.closePath(); ctx.fill();
+    // пойманный приз
+    if (captured) {
+      ctx.fillStyle = captured.color;
+      ctx.beginPath(); ctx.arc(clawX, clawY + 35, captured.r, 0, 7); ctx.fill();
+    }
+  }
+
+  function loop() {
+    if (state2 === "down") {
+      clawY += 6;
+      var hitIdx = -1;
+      for (var i = 0; i < prizes.length; i++) {
+        var p = prizes[i];
+        if (p.taken) continue;
+        if (Math.abs(p.x - clawX) < 30 && clawY + 35 >= p.y - p.r) { hitIdx = i; break; }
+      }
+      if (hitIdx >= 0) {
+        var pz = prizes[hitIdx];
+        // 55% шанс зацепить
+        if (Math.random() < 0.55) {
+          pz.taken = true;
+          captured = pz;
+        }
+        state2 = "up";
+      } else if (clawY >= 340) {
+        state2 = "up";
+      }
+    } else if (state2 === "up") {
+      clawY -= 6;
+      if (clawY <= 40) {
+        clawY = 40;
+        finishClaw();
+      }
+    }
+    draw();
+    raf = requestAnimationFrame(loop);
+  }
+
+  function finishClaw() {
+    state2 = "done";
+    dropBtn.disabled = false;
+    if (captured) {
+      var mult = captured.mult;
+      var payout = Math.round(betAmt * mult);
+      addBalance(payout);
+      pushMyFeed(payout, true); pushMyFeed(betAmt, false);
+      statusEl.textContent = "✅ Приз x" + mult + " — +" + fmt(payout) + " ⭐";
+      statusEl.className = "status-txt win";
+      toast("Приз пойман!", "🦾", "x" + mult + " → +" + fmt(payout) + " ⭐");
+      renderTop();
+    } else {
+      pushMyFeed(betAmt, false);
+      statusEl.textContent = "❌ Приз ускользнул... — ставка потеряна";
+      statusEl.className = "status-txt lose";
+    }
+    captured = null;
+    // сброс клешни
+    clawX = randInt(120, canvas.width - 120);
+    setTimeout(function () { if (state2 === "done") { state2 = "idle"; initPrizes(); } }, 800);
+  }
+
+  dropBtn.onclick = function () {
+    if (state2 !== "idle") return;
+    var amt = readBet(inp);
+    if (!canBet(amt)) return;
+    addBalance(-amt);
+    betAmt = amt;
+    state2 = "down";
+    dropBtn.disabled = true;
+    statusEl.textContent = "Клешня опускается...";
+    statusEl.className = "status-txt";
+  };
+
+  loop();
+  return function () { cancelAnimationFrame(raf); };
+}
+
+/* ============================================================
+   4. САМОЛЁТ
+============================================================ */
+function renderPlane(root) {
+  root.innerHTML =
+    betPanelHTML(10) +
+    '<div class="panel">' +
+    '<canvas id="planeCanvas" width="600" height="380"></canvas>' +
+    '<div class="status-txt" id="planeStatus" style="margin-top:8px">Удерживайте «Тяга» для взлёта</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:8px">' +
+    '<button class="btn btn-green" id="planeThrust" style="flex:1">⬆️ Тяга / Скорость</button>' +
+    '<button class="btn btn-yellow" id="planeLand" style="flex:1" disabled>Посадка</button>' +
+    '</div>' +
+    '<div class="section-title">Множители площадок: x1.5 · x2.5 · x5 · x10</div>';
+
+  var inp = wireBetChips(root);
+  var canvas = root.querySelector("#planeCanvas");
+  var ctx = canvas.getContext("2d");
+  var statusEl = root.querySelector("#planeStatus");
+  var thrustBtn = root.querySelector("#planeThrust");
+  var landBtn = root.querySelector("#planeLand");
+
+  var planes = [
+    { mult: 1.5, y: 0, x: 0, len: 90 },
+    { mult: 2.5, y: 0, x: 0, len: 90 },
+    { mult: 5,   y: 0, x: 0, len: 80 },
+    { mult: 10,  y: 0, x: 0, len: 80 }
+  ];
+  var W = canvas.width, H = canvas.height;
+  // расстановка площадок по X
+  var groundY = H - 40;
+  planes[0].x = 20; planes[0].y = groundY - 10;
+  planes[1].x = 150; planes[1].y = groundY - 70;
+  planes[2].x = 300; planes[2].y = groundY - 140;
+  planes[3].x = 460; planes[3].y = groundY - 200;
+
+  var plane = { x: 40, y: groundY - 20, vy: 0, vx: 0 };
+  var thrust = false;
+  var playing = false;
+  var raf = 0;
+  var mines = [];
+  var betAmt = 0;
+  var landed = false;
+
+  function initMines() {
+    mines = [];
+    for (var i = 0; i < 7; i++) {
+      mines.push({ x: rand(160, W - 40), y: rand(80, groundY - 60), r: 16, hit: false });
+    }
+  }
+  initMines();
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // небо
+    var grd = ctx.createLinearGradient(0, 0, 0, H);
+    grd.addColorStop(0, "#101a2c"); grd.addColorStop(1, "#0b0c10");
+    ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
+    // земля
+    ctx.fillStyle = "#1a1e28"; ctx.fillRect(0, groundY, W, H - groundY);
+    // площадки
+    for (var i = 0; i < planes.length; i++) {
+      var p = planes[i];
+      ctx.fillStyle = "#33384a";
+      ctx.fillRect(p.x, p.y, p.len, 10);
+      ctx.fillStyle = "#facc15"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("x" + p.mult, p.x + p.len / 2, p.y - 6);
+    }
+    // мины
+    for (var j = 0; j < mines.length; j++) {
+      var m = mines[j];
+      if (m.hit) continue;
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, 7); ctx.fill();
+      ctx.fillStyle = "#0f1014"; ctx.font = "bold 16px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("✸", m.x, m.y);
+    }
+    // самолёт
+    ctx.fillStyle = "#22c55e";
+    ctx.beginPath();
+    ctx.moveTo(plane.x, plane.y);
+    ctx.lineTo(plane.x - 22, plane.y - 8);
+    ctx.lineTo(plane.x - 22, plane.y + 8);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#facc15"; ctx.fillRect(plane.x - 26, plane.y - 3, 8, 6);
+  }
+
+  function loop() {
+    if (playing) {
+      if (thrust) {
+        plane.vy -= 0.22;
+        plane.vx += 0.08;
+      } else {
+        plane.vy += 0.18;
+      }
+      plane.vy = Math.max(-3, Math.min(3, plane.vy));
+      plane.vx = Math.max(0, Math.min(3.2, plane.vx));
+      plane.x += plane.vx;
+      plane.y += plane.vy;
+      if (plane.y < 30) { plane.y = 30; plane.vy = 0; }
+      if (plane.y > groundY - 20) { plane.y = groundY - 20; if (plane.vy > 1) crashPlane(); }
+      // мины
+      for (var i = 0; i < mines.length; i++) {
+        var m = mines[i];
+        if (m.hit) continue;
+        var dx = m.x - plane.x, dy = m.y - plane.y;
+        if (dx * dx + dy * dy < (m.r + 10) * (m.r + 10)) { m.hit = true; crashPlane(); return; }
+      }
+      // посадка на площадку
+      if (!landed) {
+        for (var k = 0; k < planes.length; k++) {
+          var p = planes[k];
+          if (plane.x > p.x - 5 && plane.x < p.x + p.len + 5 &&
+              plane.y + 10 >= p.y - 4 && plane.y + 10 <= p.y + 14 && plane.vy > -0.5) {
+            landed = true;
+            landPlane(p.mult);
+            return;
+          }
+        }
+      }
+      if (plane.x > W + 30) { crashPlane(); return; }
+    }
+    draw();
+    raf = requestAnimationFrame(loop);
+  }
+
+  function crashPlane() {
+    if (!playing) return;
+    playing = false; landed = true;
+    thrust = false; thrustBtn.disabled = false; landBtn.disabled = true;
+    pushMyFeed(betAmt, false);
+    statusEl.textContent = "💥 Самолёт разбился — ставка потеряна";
+    statusEl.className = "status-txt lose";
+    renderTop();
+  }
+
+  function landPlane(mult) {
+    if (!playing) return;
+    playing = false;
+    thrust = false; thrustBtn.disabled = false; landBtn.disabled = true;
+    var payout = Math.round(betAmt * mult);
+    addBalance(payout);
+    pushMyFeed(payout, true); pushMyFeed(betAmt, false);
+    statusEl.textContent = "✅ Посадка x" + mult + " — +" + fmt(payout) + " ⭐";
+    statusEl.className = "status-txt win";
+    toast("Успешная посадка!", "✈️", "x" + mult + " → +" + fmt(payout) + " ⭐");
+    renderTop();
+  }
+
+  function startGame() {
+    var amt = readBet(inp);
+    if (!canBet(amt)) return;
+    addBalance(-amt);
+    betAmt = amt;
+    playing = true; landed = false;
+    plane = { x: 40, y: groundY - 20, vy: -0.3, vx: 1.4 };
+    initMines();
+    thrustBtn.disabled = true; landBtn.disabled = false;
+    statusEl.textContent = "Взлёт! Удерживайте тягу, облетайте мины, садитесь на площадку";
+    statusEl.className = "status-txt";
+  }
+
+  function bindHold(el) {
+    el.addEventListener("touchstart", function (e) { e.preventDefault(); if (playing) thrust = true; }, { passive: false });
+    el.addEventListener("touchend", function (e) { e.preventDefault(); thrust = false; }, { passive: false });
+    el.addEventListener("mousedown", function () { if (playing) thrust = true; });
+    el.addEventListener("mouseup", function () { thrust = false; });
+    el.addEventListener("mouseleave", function () { thrust = false; });
+  }
+  bindHold(thrustBtn);
+  // старт по короткому тапу через отдельный обработчик
+  thrustBtn.addEventListener("click", function () {
+    if (!playing) { startGame(); }
+  });
+  landBtn.onclick = function () {
+    if (!playing) return;
+    var closest = null, minD = 99999;
+    for (var i = 0; i < planes.length; i++) {
+      var p = planes[i];
+      var cy = plane.y + 10;
+      var cx = plane.x;
+      var inside = cx > p.x && cx < p.x + p.len;
+      var dy = Math.abs(cy - p.y);
+      if (inside && dy < 30) {
+        var d = dy;
+        if (d < minD) { minD = d; closest = p; }
+      }
+    }
+    if (closest) { landed = true; landPlane(closest.mult); }
+    else { statusEl.textContent = "Площадка далеко — подлетите ближе и мягко снижайтесь"; statusEl.className = "status-txt"; }
+  };
+
+  loop();
+  return function () { cancelAnimationFrame(raf); };
+}
+
+/* ============================================================
+   5. КОРОВА НА ДОРОГЕ
+============================================================ */
+function renderCow(root) {
+  root.innerHTML =
+    betPanelHTML(10) +
+    '<div class="panel">' +
+    '<canvas id="cowCanvas" width="600" height="420"></canvas>' +
+    '<div class="status-txt" id="cowStatus" style="margin-top:8px">Шаг вперёд — кнопка «Вперёд», забрать — «Забрать»</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px">' +
+    '<button class="btn btn-green" id="cowFwd" style="flex:1">🐄 Вперёд</button>' +
+    '<button class="btn btn-yellow" id="cowCash" style="flex:1" disabled>Забрать</button>' +
+    '</div>';
+
+  var inp = wireBetChips(root);
+  var canvas = root.querySelector("#cowCanvas");
+  var ctx = canvas.getContext("2d");
+  var statusEl = root.querySelector("#cowStatus");
+  var fwdBtn = root.querySelector("#cowFwd");
+  var cashBtn = root.querySelector("#cowCash");
+
+  var W = canvas.width, H = canvas.height;
+  var laneH = 60;
+  var startY = H - 60;
+  var lanes = 5;
+  var laneY = [];
+  for (var i = 0; i < lanes; i++) laneY.push(startY - laneH * (i + 1));
+  var multPerLane = [1.5, 2, 2.5, 3.5, 5];
+
+  var cowLane = -1; // -1 = старт (перед дорогой)
+  var playing = false;
+  var betAmt = 0;
+  var cars = [];
+  var raf = 0;
+
+  function initCars() {
+    cars = [];
+    for (var l = 0; l < lanes; l++) {
+      var dir = l % 2 === 0 ? 1 : -1;
+      var count = 2 + (l % 2);
+      for (var c = 0; c < count; c++) {
+        cars.push({
+          lane: l,
+          x: rand(0, W),
+          spd: rand(2, 4.5) * dir,
+          color: ["#ef4444", "#3b82f6", "#a855f7", "#f97316", "#22c55e"][randInt(0, 4)]
+        });
+      }
+    }
+  }
+  initCars();
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // трава
+    ctx.fillStyle = "#14261a"; ctx.fillRect(0, 0, W, startY - laneH * lanes);
+    // дорога
+    ctx.fillStyle = "#1c1f28"; ctx.fillRect(0, startY - laneH * lanes, W, laneH * lanes);
+    // разделители
+    for (var l = 0; l <= lanes; l++) {
+      ctx.strokeStyle = "#3a3f4f"; ctx.setLineDash([12, 10]); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, startY - laneH * l); ctx.lineTo(W, startY - laneH * l); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    // старт
+    ctx.fillStyle = "#1a3320"; ctx.fillRect(0, startY, W, H - startY);
+    // машины
+    for (var i = 0; i < cars.length; i++) {
+      var c = cars[i];
+      var y = startY - laneH * (c.lane + 1) + 12;
+      ctx.fillStyle = c.color;
+      ctx.fillRect(c.x, y, 50, 30);
+      ctx.fillStyle = "#0f1014"; ctx.fillRect(c.x + 8, y + 6, 12, 8); ctx.fillRect(c.x + 30, y + 6, 12, 8);
+    }
+    // корова
+    var cy = cowLane < 0 ? startY + 30 : laneY[cowLane] + 30;
+    var cx = W / 2;
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath(); ctx.ellipse(cx, cy, 26, 18, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#0f1014";
+    ctx.beginPath(); ctx.arc(cx + 10, cy - 6, 4, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx - 6, cy + 4, 4, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx - 15, cy - 8, 5, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 20, cy + 6, 3, 0, 7); ctx.fill();
+    // глаза
+    ctx.fillStyle = "#000";
+    ctx.beginPath(); ctx.arc(cx + 20, cy - 8, 2.5, 0, 7); ctx.fill();
+    // множители
+    ctx.fillStyle = "#facc15"; ctx.font = "bold 13px sans-serif"; ctx.textAlign = "left";
+    for (var k = 0; k < lanes; k++) {
+      ctx.fillText("x" + multPerLane[k], 6, laneY[k] + 18);
+    }
+  }
+
+  function loop() {
+    for (var i = 0; i < cars.length; i++) {
+      var c = cars[i];
+      c.x += c.spd;
+      if (c.x > W + 60) c.x = -60;
+      if (c.x < -60) c.x = W + 60;
+      // столкновение с коровой
+      if (playing && cowLane >= 0 && c.lane === cowLane) {
+        var cy2 = laneY[cowLane] + 12;
+        if (c.x < W / 2 + 26 && c.x + 50 > W / 2 - 26) {
+          // проверка по времени — машина в полосе коровы
+          if (Math.abs(c.x - W / 2) < 35) {
+            loseCow();
+          }
+        }
+      }
+    }
+    draw();
+    raf = requestAnimationFrame(loop);
+  }
+
+  function loseCow() {
+    if (!playing) return;
+    playing = false;
+    fwdBtn.disabled = false; cashBtn.disabled = true;
+    pushMyFeed(betAmt, false);
+    statusEl.textContent = "🚗 Корова сбита машиной — ставка потеряна";
+    statusEl.className = "status-txt lose";
+    renderTop();
+    cowLane = -1;
+    initCars();
+  }
+
+  fwdBtn.onclick = function () {
+    if (!playing) {
+      var amt = readBet(inp);
+      if (!canBet(amt)) return;
+      addBalance(-amt);
+      betAmt = amt;
+      playing = true;
+      cowLane = -1;
+      initCars();
+      fwdBtn.disabled = false; cashBtn.disabled = false;
+      statusEl.textContent = "Погнали! Шаг 0/5";
+      statusEl.className = "status-txt";
+    }
+    if (cowLane >= lanes - 1) {
+      // уже на максимуме — забрать
+      cashCow();
+      return;
+    }
+    cowLane++;
+    statusEl.textContent = "Полоса " + (cowLane + 1) + "/" + lanes + " — множитель x" + multPerLane[cowLane];
+  };
+
+  function cashCow() {
+    if (!playing || cowLane < 0) return;
+    playing = false;
+    fwdBtn.disabled = false; cashBtn.disabled = true;
+    var mult = multPerLane[cowLane];
+    var payout = Math.round(betAmt * mult);
+    addBalance(payout);
+    pushMyFeed(payout, true); pushMyFeed(betAmt, false);
+    statusEl.textContent = "✅ Забрали x" + mult + " — +" + fmt(payout) + " ⭐";
+    statusEl.className = "status-txt win";
+    toast("Корова спасена!", "🐄", "x" + mult + " → +" + fmt(payout) + " ⭐");
+    renderTop();
+    cowLane = -1;
+    initCars();
+  }
+  cashBtn.onclick = cashCow;
+
+  loop();
+  return function () { cancelAnimationFrame(raf); };
+}
+
+/* ============================================================
+   6. КЕЙСЫ
+============================================================ */
+function renderCases(root) {
+  root.innerHTML =
+    '<div class="cases-row">' +
+    '<div class="case-item" data-case="1">' +
+    '<div class="ci-ico">📦</div><div class="ci-nm">Стартовый кейс</div><div class="ci-pr">Ставка 1 ⭐ · выигрыш до 15 ⭐</div>' +
+    '</div>' +
+    '<div class="case-item" data-case="10">' +
+    '<div class="ci-ico">💎</div><div class="ci-nm">Звёздный кейс</div><div class="ci-pr">Ставка 10 ⭐ · выигрыш до 150 ⭐</div>' +
+    '</div>' +
+    '</div>' +
+    '<div class="case-reel" id="caseReel">' +
+    '<div class="status-txt">Выберите кейс для открытия</div>' +
+    '</div>';
+
+  var reel = root.querySelector("#caseReel");
+  var items = root.querySelectorAll(".case-item");
+  var busy = false;
+
+  function openCase(price) {
+    if (busy) return;
+    if (!canBet(price)) return;
+    busy = true;
+    addBalance(-price);
+    var t0 = Date.now();
+    var dur = 1600;
+    // определим приз
+    var maxMult = price === 1 ? 15 : 15;
+    var r = Math.random();
+    var winAmt;
+    if (price === 1) {
+      if (r < 0.35) winAmt = 0;
+      else if (r < 0.75) winAmt = randInt(1, 3);
+      else if (r < 0.95) winAmt = randInt(4, 8);
+      else winAmt = randInt(10, 15);
+    } else {
+      if (r < 0.35) winAmt = randInt(0, 5);
+      else if (r < 0.72) winAmt = randInt(8, 20);
+      else if (r < 0.93) winAmt = randInt(25, 60);
+      else winAmt = randInt(80, 150);
+    }
+    function tick() {
+      var dt = Date.now() - t0;
+      if (dt < dur) {
+        var cur = randInt(1, price * 15);
+        reel.innerHTML = '<div class="case-win" style="color:#9aa3b5">' + cur + ' ⭐</div><div class="status-txt">Крутим...</div>';
+        setTimeout(tick, 80);
+      } else {
+        if (winAmt > 0) {
+          addBalance(winAmt);
+          pushMyFeed(winAmt, true);
+          pushMyFeed(price, false);
+          reel.innerHTML = '<div class="case-win">' + winAmt + ' ⭐</div><div class="status-txt win">Выигрыш зачислен!</div>';
+          toast("Выигрыш!", "🎁", "+" + fmt(winAmt) + " ⭐ из кейса.");
+        } else {
+          pushMyFeed(price, false);
+          reel.innerHTML = '<div class="case-win" style="color:#ef4444">0 ⭐</div><div class="status-txt lose">Пусто. Попробуйте ещё!</div>';
+        }
+        renderTop();
+        busy = false;
+      }
+    }
+    tick();
+  }
+
+  for (var i = 0; i < items.length; i++) {
+    items[i].onclick = function () {
+      openCase(parseInt(this.getAttribute("data-case"), 10));
+    };
+  }
+  return null;
+}
+
+/* ============================================================
+   7. МИНЫ
+============================================================ */
+function renderMines(root) {
+  root.innerHTML =
+    betPanelHTML(10) +
+    '<div class="panel">' +
+    '<div class="panel-label">Множитель: <span id="minesMult" style="color:#facc15">1.00x</span> · Кристаллов: <span id="minesFound" style="color:#22c55e">0</span></div>' +
+    '<div class="mines-grid" id="minesGrid"></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px">' +
+    '<button class="btn btn-green" id="minesStart" style="flex:1">Начать игру</button>' +
+    '<button class="btn btn-yellow" id="minesCash" style="flex:1" disabled>Забрать</button>' +
+    '</div>';
+
+  var inp = wireBetChips(root);
+  var grid = root.querySelector("#minesGrid");
+  var multEl = root.querySelector("#minesMult");
+  var foundEl = root.querySelector("#minesFound");
+  var startBtn = root.querySelector("#minesStart");
+  var cashBtn = root.querySelector("#minesCash");
+
+  var TOTAL = 25, BOMBS = 5, GEMS = TOTAL - BOMBS;
+  var bombs = [], opened = [], playing = false, betAmt = 0, found = 0;
+
+  function buildGrid() {
+    grid.innerHTML = "";
+    for (var i = 0; i < TOTAL; i++) {
+      var d = document.createElement("div");
+      d.className = "mine-cell";
+      d.setAttribute("data-idx", i);
+      d.textContent = "";
+      grid.appendChild(d);
+    }
+  }
+  buildGrid();
+
+  function calcMult() {
+    // множитель растёт при открытии кристаллов
+    if (found === 0) return 1.0;
+    var base = 1.0;
+    for (var i = 0; i < found; i++) {
+      base *= (TOTAL - i) / (GEMS - i);
+    }
+    return Math.round(base * 0.97 * 100) / 100;
+  }
+
+  function setCellsLock(lock) {
+    var cells = grid.querySelectorAll(".mine-cell");
+    for (var i = 0; i < cells.length; i++) {
+      if (lock) cells[i].classList.add("disabled");
+      else cells[i].classList.remove("disabled");
+    }
+  }
+
+  function startGame() {
+    if (playing) return;
+    var amt = readBet(inp);
+    if (!canBet(amt)) return;
+    addBalance(-amt);
+    betAmt = amt;
+    playing = true;
+    found = 0;
+    opened = [];
+    bombs = [];
+    var pool = [];
+    for (var i = 0; i < TOTAL; i++) pool.push(i);
+    for (var b = 0; b < BOMBS; b++) {
+      var idx = randInt(0, pool.length - 1);
+      bombs.push(pool[idx]);
+      pool.splice(idx, 1);
+    }
+    buildGrid();
+    multEl.textContent = "1.00x";
+    foundEl.textContent = "0";
+    startBtn.disabled = true;
+    startBtn.textContent = "Игра идёт...";
+    cashBtn.disabled = false;
+    cashBtn.textContent = "Забрать";
+    var cells = grid.querySelectorAll(".mine-cell");
+    for (var c = 0; c < cells.length; c++) {
+      cells[c].onclick = onCellClick;
+    }
+  }
+
+  function onCellClick() {
+    if (!playing) return;
+    var idx = parseInt(this.getAttribute("data-idx"), 10);
+    if (opened.indexOf(idx) >= 0) return;
+    opened.push(idx);
+    if (bombs.indexOf(idx) >= 0) {
+      // взрыв
+      this.classList.add("bomb");
+      this.textContent = "💣";
+      playing = false;
+      setCellsLock(true);
+      // показать все бомбы
+      var cells = grid.querySelectorAll(".mine-cell");
+      for (var i = 0; i < cells.length; i++) {
+        var ci = parseInt(cells[i].getAttribute("data-idx"), 10);
+        if (bombs.indexOf(ci) >= 0) { cells[i].textContent = "💣"; cells[i].classList.add("bomb"); }
+      }
+      pushMyFeed(betAmt, false);
+      startBtn.disabled = false;
+      startBtn.textContent = "Начать игру";
+      cashBtn.disabled = true;
+      renderTop();
+      toast("Взрыв!", "💥", "Ставка потеряна.");
+    } else {
+      this.classList.add("opened");
+      this.textContent = "💎";
+      found++;
+      foundEl.textContent = found;
+      var m = calcMult();
+      multEl.textContent = m.toFixed(2) + "x";
+      if (found >= GEMS) {
+        // все кристаллы открыты — автозабор
+        cashOut();
+      }
+    }
+  }
+
+  function cashOut() {
+    if (!playing || found === 0) return;
+    playing = false;
+    setCellsLock(true);
+    var m = calcMult();
+    var payout = Math.round(betAmt * m);
+    addBalance(payout);
+    pushMyFeed(payout, true); pushMyFeed(betAmt, false);
+    startBtn.disabled = false;
+    startBtn.textContent = "Начать игру";
+    cashBtn.disabled = true;
+    renderTop();
+    toast("Забрали!", "💎", "x" + m.toFixed(2) + " → +" + fmt(payout) + " ⭐");
+  }
+
+  startBtn.onclick = startGame;
+  cashBtn.onclick = cashOut;
+  return null;
+}
+
+/* ============================================================
+   8. АПГРЕЙД
+============================================================ */
+function renderUpgrade(root) {
+  root.innerHTML =
+    betPanelHTML(10) +
+    '<div class="panel">' +
+    '<div class="panel-label">Выберите множитель риска</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+    '<button class="btn btn-dark upg-opt" data-mult="1.5" data-chance="55" style="flex:1;min-width:100px">x1.5<br><span style="font-size:11px;color:#22c55e">шанс 55%</span></button>' +
+    '<button class="btn btn-dark upg-opt" data-mult="2" data-chance="40" style="flex:1;min-width:100px">x2<br><span style="font-size:11px;color:#facc15">шанс 40%</span></button>' +
+    '<button class="btn btn-dark upg-opt" data-mult="5" data-chance="17" style="flex:1;min-width:100px">x5<br><span style="font-size:11px;color:#ef4444">шанс 17%</span></button>' +
+    '</div>' +
+    '<div class="status-txt" id="upgStatus" style="margin-top:12px">Выберите опцию и нажмите «Крутить»</div>' +
+    '</div>' +
+    '<button class="btn btn-yellow" id="upgSpin">Крутить</button>';
+
+  var inp = wireBetChips(root);
+  var statusEl = root.querySelector("#upgStatus");
+  var spinBtn = root.querySelector("#upgSpin");
+  var opts = root.querySelectorAll(".upg-opt");
+  var picked = null;
+
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].onclick = function () {
+      for (var j = 0; j < opts.length; j++) opts[j].style.borderColor = "";
+      this.style.borderColor = "#facc15";
+      picked = {
+        mult: parseFloat(this.getAttribute("data-mult")),
+        chance: parseFloat(this.getAttribute("data-chance"))
+      };
+    };
+  }
+
+  spinBtn.onclick = function () {
+    if (!picked) { toast("Выберите опцию", "⬆️", "Сначала выберите множитель риска."); return; }
+    var amt = readBet(inp);
+    if (!canBet(amt)) return;
+    addBalance(-amt);
+    // анимация
+    statusEl.textContent = "Крутим...";
+    statusEl.className = "status-txt";
+    spinBtn.disabled = true;
+    var t0 = Date.now();
+    var timer = setInterval(function () {
+      if (Date.now() - t0 > 900) {
+        clearInterval(timer);
+        spinBtn.disabled = false;
+        var win = Math.random() * 100 < picked.chance;
+        if (win) {
+          var payout = Math.round(amt * picked.mult);
+          addBalance(payout);
+          pushMyFeed(payout, true); pushMyFeed(amt, false);
+          statusEl.textContent = "✅ Успех x" + picked.mult + " — +" + fmt(payout) + " ⭐";
+          statusEl.className = "status-txt win";
+          toast("Апгрейд успешен!", "⬆️", "x" + picked.mult + " → +" + fmt(payout) + " ⭐");
+        } else {
+          pushMyFeed(amt, false);
+          statusEl.textContent = "❌ Неудача — ставка сгорела";
+          statusEl.className = "status-txt lose";
+        }
+        renderTop();
+      }
+    }, 100);
+  };
+  return null;
+}
+
+/* ============================================================
+   9. ПЛИНКО
+============================================================ */
+function renderPlinko(root) {
+  root.innerHTML =
+    betPanelHTML(10) +
+    '<div class="panel">' +
+    '<canvas id="plinkoCanvas" width="600" height="380"></canvas>' +
+    '<div class="status-txt" id="plinkoStatus" style="margin-top:8px">Нажмите «Бросить» — шарик упадёт в лунку</div>' +
+    '</div>' +
+    '<button class="btn btn-yellow" id="plinkoDrop">Бросить шарик</button>';
+
+  var inp = wireBetChips(root);
+  var canvas = root.querySelector("#plinkoCanvas");
+  var ctx = canvas.getContext("2d");
+  var statusEl = root.querySelector("#plinkoStatus");
+  var dropBtn = root.querySelector("#plinkoDrop");
+
+  var W = canvas.width, H = canvas.height;
+  var BUCKETS = 9;
+  var mults = [5, 2, 0.5, 1.5, 0.2, 1.5, 0.5, 2, 5];
+  var bucketW = W / BUCKETS;
+
+  // сетка пинов
+  var pins = [];
+  var rows = 8;
+  for (var r = 0; r < rows; r++) {
+    var cols = r + 3;
+    for (var c = 0; c < cols; c++) {
+      var x = W / 2 + (c - (cols - 1) / 2) * 55;
+      var y = 60 + r * 38;
+      pins.push({ x: x, y: y, hit: 0 });
+    }
+  }
+
+  var ball = null;
+  var raf = 0;
+  var betAmt = 0;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // фон
+    ctx.fillStyle = "#0b0c10"; ctx.fillRect(0, 0, W, H);
+    // пины
+    for (var i = 0; i < pins.length; i++) {
+      var p = pins[i];
+      ctx.fillStyle = p.hit > 0 ? "#facc15" : "#3a3f4f";
+      ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 7); ctx.fill();
+      if (p.hit > 0) p.hit--;
+    }
+    // лунки
+    var by = H - 40;
+    for (var b = 0; b < BUCKETS; b++) {
+      var bx = b * bucketW;
+      var m = mults[b];
+      var hot = m >= 2;
+      ctx.fillStyle = hot ? "#3a2a05" : "#1f232d";
+      ctx.fillRect(bx + 3, by, bucketW - 6, 34);
+      ctx.fillStyle = hot ? "#facc15" : "#9aa3b5";
+      ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("x" + m, bx + bucketW / 2, by + 17);
+    }
+    // шарик
+    if (ball) {
+      ctx.fillStyle = "#facc15";
+      ctx.beginPath(); ctx.arc(ball.x, ball.y, 8, 0, 7); ctx.fill();
+    }
+  }
+
+  function drop() {
+    if (ball) return;
+    var amt = readBet(inp);
+    if (!canBet(amt)) return;
+    addBalance(-amt);
+    betAmt = amt;
+    ball = { x: W / 2, y: 20, vy: 0, vx: rand(-0.4, 0.4), targetBucket: randInt(0, BUCKETS - 1), landed: false };
+    dropBtn.disabled = true;
+    statusEl.textContent = "Шарик падает...";
+    statusEl.className = "status-txt";
+  }
+
+  function loop() {
+    if (ball && !ball.landed) {
+      ball.vy += 0.45;
+      ball.y += ball.vy;
+      ball.x += ball.vx;
+      // столкновение с пинами
+      for (var i = 0; i < pins.length; i++) {
+        var p = pins[i];
+        var dx = ball.x - p.x, dy = ball.y - p.y;
+        var d2 = dx * dx + dy * dy;
+        if (d2 < 100) {
+          var d = Math.sqrt(d2) || 0.01;
+          var nx = dx / d, ny = dy / d;
+          ball.x = p.x + nx * 10;
+          ball.y = p.y + ny * 10;
+          ball.vx = (Math.random() - 0.5) * 2.5;
+          ball.vy = Math.max(1, Math.abs(ball.vy) * 0.6);
+          p.hit = 4;
+        }
+      }
+      // стены
+      if (ball.x < 10) { ball.x = 10; ball.vx = Math.abs(ball.vx); }
+      if (ball.x > W - 10) { ball.x = W - 10; ball.vx = -Math.abs(ball.vx); }
+      if (ball.y >= H - 46) {
+        ball.landed = true;
+        var bucket = Math.max(0, Math.min(BUCKETS - 1, Math.floor(ball.x / bucketW)));
+        var mult = mults[bucket];
+        var payout = Math.round(betAmt * mult);
+        if (payout > 0) {
+          addBalance(payout);
+          if (mult >= 1) { pushMyFeed(payout, true); pushMyFeed(betAmt, false); }
+          else { pushMyFeed(payout - betAmt, false); }
+          statusEl.textContent = "Шарик в лунке x" + mult + " — " + (payout >= betAmt ? "+" : "") + fmt(payout) + " ⭐";
+          statusEl.className = "status-txt " + (payout >= betAmt ? "win" : "lose");
+          if (payout >= betAmt) toast("Победа!", "🔵", "x" + mult + " → +" + fmt(payout) + " ⭐");
+        } else {
+          pushMyFeed(betAmt, false);
+          statusEl.textContent = "x" + mult + " — ставка потеряна";
+          statusEl.className = "status-txt lose";
+        }
+        renderTop();
+        var savedMult = mult;
+        setTimeout(function () {
+          ball = null;
+          dropBtn.disabled = false;
+        }, 700);
+      }
+    }
+    draw();
+    raf = requestAnimationFrame(loop);
+  }
+
+  dropBtn.onclick = drop;
+  loop();
+  return function () { cancelAnimationFrame(raf); };
+}
+
+/* ============================================================
+   10. АРЕНА (DICE)
+============================================================ */
+function renderDice(root) {
+  root.innerHTML =
+    betPanelHTML(10) +
+    '<div class="panel" style="text-align:center">' +
+    '<div style="font-size:64px;margin:10px 0" id="diceView">🎲</div>' +
+    '<div class="mult-big" id="diceRes">—</div>' +
+    '<div class="status-txt" id="diceStatus">50/50 — удвоение ставки</div>' +
+    '</div>' +
+    '<button class="btn btn-yellow" id="diceRoll">Бросить кубик</button>';
+
+  var inp = wireBetChips(root);
+  var view = root.querySelector("#diceView");
+  var resEl = root.querySelector("#diceRes");
+  var statusEl = root.querySelector("#diceStatus");
+  var rollBtn = root.querySelector("#diceRoll");
+
+  rollBtn.onclick = function () {
+    var amt = readBet(inp);
+    if (!canBet(amt)) return;
+    addBalance(-amt);
+    rollBtn.disabled = true;
+    resEl.textContent = "—"; resEl.style.color = "#facc15";
+    statusEl.textContent = "Кубик катится...";
+    statusEl.className = "status-txt";
+    var faces = ["⚀","⚁","⚂","⚃","⚄","⚅"];
+    var t0 = Date.now();
+    var anim = setInterval(function () {
+      view.textContent = faces[randInt(0, 5)];
+      if (Date.now() - t0 > 1100) {
+        clearInterval(anim);
+        rollBtn.disabled = false;
+        var my = randInt(1, 6), opp = randInt(1, 6);
+        view.textContent = faces[my - 1] + " vs " + faces[opp - 1];
+        if (my > opp) {
+          var payout = amt * 2;
+          addBalance(payout);
+          pushMyFeed(payout, true); pushMyFeed(amt, false);
+          resEl.textContent = "ПОБЕДА +" + fmt(amt) + " ⭐";
+          resEl.style.color = "#22c55e";
+          statusEl.textContent = "Вы: " + my + " · Соперник: " + opp;
+          statusEl.className = "status-txt win";
+          toast("Победа!", "🎲", "+" + fmt(amt) + " ⭐");
+        } else if (my < opp) {
+          pushMyFeed(amt, false);
+          resEl.textContent = "ПРОИГРЫШ −" + fmt(amt) + " ⭐";
+          resEl.style.color = "#ef4444";
+          statusEl.textContent = "Вы: " + my + " · Соперник: " + opp;
+          statusEl.className = "status-txt lose";
+        } else {
+          // ничья — возврат
+          addBalance(amt);
+          resEl.textContent = "НИЧЬЯ — возврат ставки";
+          resEl.style.color = "#9aa3b5";
+          statusEl.textContent = "Вы: " + my + " · Соперник: " + opp;
+          statusEl.className = "status-txt";
+        }
+        renderTop();
+      }
+    }, 80);
+  };
+  return null;
+}
+
+/* ============================================================
+   ИНИЦИАЛИЗАЦИЯ
+============================================================ */
+function tickSocial() {
+  // обновляем фейковый фид
+  if (Math.random() < 0.55) pushFakeFeed();
+  // двигаем балансы топ-игроков
+  for (var i = 0; i < state.topPlayers.length; i++) {
+    var p = state.topPlayers[i];
+    p.bal = Math.max(50, Math.round(p.bal + rand(-60, 80)));
+  }
+  renderFeed();
+  renderTop();
+  saveState();
+}
+
+function init() {
+  initTg();
+  loadState();
+  seedSocial();
+  initDemo();
+  setBalance(state.balance);
+  buildGamesGrid();
+  renderFeed();
+  renderTop();
+  renderBonus();
+  initOnline();
+  setInterval(tickSocial, 6500);
+  setInterval(function () { renderTop(); }, 4000);
+}
+
+init();
+</script>
+</body>
+</html>
