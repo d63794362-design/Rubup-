@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>РИСКА</title>
+    <script src="https://telegram.org"></script>
+    <style>
+        :root {
+            --bg-main: #0f1014;
+            --bg-card: #181a20;
+            --bg-hover: #22252e;
+            --accent: #facc15;
+            --accent-dark: #ca8a04;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --danger: #ef4444;
+            --success: #22c55e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        /* Уведомление сверху слева (единственное место с предупреждением) */
+        .top-left-notice {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            max-width: 270px;
+            background: rgba(24, 26, 32, 0.96);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 10px 30px 10px 12px;
+            font-size: 12px;
+            line-height: 1.35;
+            color: #e5e7eb;
+            z-index: 1000;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .top-left-notice.hidden {
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+        }
+
+        .notice-close {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 2px 5px;
+        }
+
+        /* Шапка приложения */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: var(--bg-card);
+            border-bottom: 1px solid #262932;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .balance-box {
+            display: flex;
+            align-items: center;
+            background: #23262f;
+            padding: 5px 8px 5px 12px;
+            border-radius: 10px;
+            gap: 10px;
+            border: 1px solid #323642;
+        }
+
+        .balance-amount {
+            font-weight: 700;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .btn-plus {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 7px;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .container {
+            padding: 16px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, #272210 0%, #181a20 100%);
+            border: 1px solid rgba(250, 204, 21, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+
+        .hero-banner h2 {
+            font-size: 18px;
+            margin-bottom: 4px;
+            color: var(--accent);
+        }
+
+        .hero-banner p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #d1d5db;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .game-card {
+            background: var(--bg-card);
+            border: 1px solid #262932;
+            border-radius: 14px;
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+
+        .game-card:active {
+            transform: scale(0.97);
+        }
+
+        .game-card:hover {
+            border-color: var(--accent);
+        }
+
+        .game-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .game-title {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 3px;
+        }
+
+        .game-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .game-screen {
+            display: none;
+        }
+
+        .game-screen.active {
+            display: block;
+        }
+
+        .back-btn {
+            background: #23262f;
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            cursor: pointer;
+        }
+
+        .game-panel {
+            background: var(--bg-card);
+            border: 1px solid #262932;
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .controls {
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .bet-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bet-row span {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        input[type="number"] {
+            flex: 1;
+            background: #0f1014;
+            border: 1px solid #323642;
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            width: 100%;
+        }
+
+        .action-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result-log {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            min-height: 22px;
+        }
+
+        canvas {
+            width: 100%;
+            background: #0b0d11;
+            border: 1px solid #2d313d;
+            border-radius: 12px;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .mines-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin: 12px 0;
+        }
+
+        .mine-cell {
+            aspect-ratio: 1;
+            background: #23262f;
+            border: 1px solid #323642;
+            border-radius: 8px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .mine-cell.safe {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: var(--success);
+        }
+
+        .mine-cell.bomb {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: var(--danger);
+        }
+
+        .crash-display {
+            height: 120px;
+            background: #0f1014;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #262932;
+        }
+
+        .crash-mult {
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--accent);
+        }
+
+        .roulette-btns {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .r-btn {
+            padding: 12px 6px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+        }
+        .r-red { background: #dc2626; }
+        .r-black { background: #27272a; border: 1px solid #52525b; }
+        .r-green { background: #16a34a; }
+
+        .cases-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .case-item {
+            background: #23262f;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #323642;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Плашка сверху слева (только при входе) -->
+    <div id="topNotice" class="top-left-notice">
+        <button class="notice-close" onclick="closeNotice()" aria-label="Закрыть">✕</button>
+        <strong>Внимание:</strong> Это демо-режим. Пополнения и вывода средств здесь нет.
+    </div>
+
+    <!-- Шапка как в оригинале -->
+    <header>
+        <div class="logo">⚡ РИСКА</div>
+        <div class="balance-box">
+            <span>⭐ <span id="balance" class="balance-amount">100</span></span>
+            <button class="btn-plus" onclick="addStars()" title="Пополнить баланс">+</button>
+        </div>
+    </header>
+
+    <div class="container">РИСКА — Игровая платформа
+Минимальная ставка во всех режимах — 1 ⭐. Выбирай игру и побеждай!
+Режимы игры
+
+
+✈️
+Самолёт
+Управляй скоростью и садись на платформы
+
+
+🐄
+Корова
+Перейди дорогу мимо машин
+
+
+🎁
+Кейсы
+Боксы от 1 ⭐ с призами
+
+
+🚀
+Ракетка
+Успей забрать до взрыва
+
+
+💣
+Мины
+Найди кристаллы на поле
+
+
+⬆️
+Апгрейд
+Умножь звёзды до x5
+
+
+🟣
+Плинко
+Бросок шарика в лунки
+
+
+🎡
+Рулетка
+Красное, черное или зеро
+
+
+⚔️
+Арена (Кости)
+Дуэль на 50% шанса (мин. 1 ⭐)
+
+
+← Назад к играм
+
+✈️ Самолёт
+
+Удерживайте кнопку тяги, чтобы ускоряться и набирать высоту. Отпускайте, чтобы снижаться между минами 💣 на платформы!
+
+
+
+
+Ставка (⭐):
+
+
+Взлететь (мин. 1 ⭐)
+
+🔥 ТЯГА / СКОРОСТЬ (Удерживай)
+
+
+
+
+← Назад к играм
+
+🐄 Корова на дороге
+
+Переводите корову через полосы движения. С каждой полосой множитель растёт!
+
+
+
+
+Ставка (⭐):
+
+
+Начать переход (мин. 1 ⭐)
+
+⬆️ Шаг вперёд
+Забрать (x1.0)
+
+
+
+
+← Назад к играм
+
+🎁 Кейсы
+Выберите кейс для открытия:
+
+
+🍬
+Стартовый
+Цена: 1 ⭐
+Открыть
+
+
+🐸
+Звёздный
+Цена: 10 ⭐
+Открыть
+
+
+
+
+← Назад к играм
+
+🚀 Ракетка
+
+1.00x
+Ожидание старта
+
+
+
+Ставка (⭐):
+
+
+Запустить ракету
+
+
+
+← Назад к играм
+
+💣 Мины (5 бомб на поле)
+
+
+
+Ставка (⭐):
+
+
+Начать игру
+
+
+
+← Назад к играм
+
+⬆️ Апгрейд
+Выберите множитель риска:
+
+x1.5 (60%)
+x2 (45%)
+x5 (18%)
+
+
+Ставка (⭐):
+
+
+
+
+← Назад к играм
+
+🟣 Плинко
+Лунки: [x5] [x2] [x1.2] [x0.5] [x0.2] [x0.5] [x1.2] [x2] [x5]
+
+
+Ставка (⭐):
+
+
+Бросить шарик
+
+
+
+← Назад к играм
+
+🎡 Рулетка
+
+
+Ставка (⭐):
+
+
+
+Красное (x2)
+Зеро (x14)
+Черное (x2)
+
+
+
+
+← Назад к играм
+
+⚔️ Арена (Шанс 50%)
+Победа при выпадении числа меньше 50.00
+
+
+Ставка (⭐):
+
+
+Сразиться (x2)
+
+
+
+
+const tg = window.Telegram.WebApp;
+tg.expand();
+// Баланс в звёздах
+let balance = parseInt(localStorage.getItem('riska_stars_balance'));
+if (isNaN(balance)) balance = 100;
+updateBalanceUI();
+function updateBalanceUI() {
+document.getElementById('balance').innerText = balance;
+localStorage.setItem('riska_stars_balance', balance);
+}
+function closeNotice() {
+document.getElementById('topNotice').classList.add('hidden');
+}
+// Пополнение баланса кнопкой "+" без упоминания демо
+function addStars() {
+balance += 100;
+updateBalanceUI();
+if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+}
+function openGame(gameId) {
+document.getElementById('homeScreen').style.display = 'none';
+document.querySelectorAll('.game-screen').forEach(el => el.classList.remove('active'));
+document.getElementById('game-' + gameId).classList.add('active');
+if (gameId === 'mines') renderEmptyMines();
+if (gameId === 'plane') drawPlaneStatic();
+if (gameId === 'cow') drawCowStatic();
+}
+function goHome() {
+if (crashInterval) clearInterval(crashInterval);
+crashRunning = false;
+if (planeAnimId) cancelAnimationFrame(planeAnimId);
+planeActive = false;
+if (cowAnimId) cancelAnimationFrame(cowAnimId);
+cowActive = false;
+document.querySelectorAll('.game-screen').forEach(el => el.classList.remove('active'));
+document.getElementById('homeScreen').style.display = 'block';
+}
+function checkBet(amount, resElId) {
+const resEl = document.getElementById(resElId);
+if (isNaN(amount) || amount < 1) {
+resEl.style.color = 'var(--danger)';
+resEl.innerText = 'Минимальная ставка — 1 ⭐';
+return false;
+}
+if (amount > balance) {
+resEl.style.color = 'var(--danger)';
+resEl.innerText = 'Недостаточно звёзд! Нажмите «+» сверху.';
+return false;
+}
+return true;
+}
+// 1. САМОЛЁТ
+let planeActive = false;
+let planeAnimId = null;
+let planeThrust = false;
+let planeBet = 0;
+let planeState = {};
+const planePlatforms = [
+{ x: 65, w: 48, mult: 1.5, color: '#22c55e' },
+{ x: 130, w: 45, mult: 2.5, color: '#3b82f6' },
+{ x: 195, w: 42, mult: 5.0, color: '#facc15' },
+{ x: 260, w: 45, mult: 10.0, color: '#a855f7' }
+];
+function setPlaneThrust(val) {
+planeThrust = val;
+}
+function drawPlaneStatic() {
+const canvas = document.getElementById('planeCanvas');
+const ctx = canvas.getContext('2d');
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+drawPlaneWorld(ctx, canvas, 25, 60, [
+{ x: 105, y: 120 },
+{ x: 175, y: 95 },
+{ x: 240, y: 135 }
+]);
+}
+function drawPlaneWorld(ctx, canvas, px, py, mines) {
+ctx.fillStyle = '#0b0d11';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+ctx.fillStyle = '#7f1d1d';
+ctx.fillRect(0, canvas.height - 16, canvas.width, 16);
+planePlatforms.forEach(p => {
+ctx.fillStyle = p.color;
+ctx.fillRect(p.x, canvas.height - 22, p.w, 12);
+ctx.fillStyle = '#fff';
+ctx.font = 'bold 10px sans-serif';
+ctx.textAlign = 'center';
+ctx.fillText('x' + p.mult, p.x + p.w / 2, canvas.height - 26);
+});
+ctx.font = '18px sans-serif';
+ctx.textAlign = 'center';
+mines.forEach(m => {
+ctx.fillText('💣', m.x, m.y + 6);
+});
+ctx.font = '22px sans-serif';
+ctx.fillText('✈️', px, py + 7);
+}
+function startPlaneGame() {
+const bet = parseInt(document.getElementById('bet-plane').value);
+if (!checkBet(bet, 'res-plane')) return;
+balance -= bet;
+updateBalanceUI();
+planeBet = bet;
+planeActive = true;
+planeThrust = false;
+document.getElementById('res-plane').innerText = '';
+document.getElementById('btn-plane-start').style.display = 'none';
+document.getElementById('btn-plane-thrust').style.display = 'block';
+const mines = [
+{ x: 100 + Math.random() * 25, y: 75 + Math.random() * 65 },
+{ x: 170 + Math.random() * 25, y: 60 + Math.random() * 80 },
+{ x: 240 + Math.random() * 25, y: 70 + Math.random() * 75 }
+];
+planeState = { x: 20, y: 55, vx: 1.1, vy: 0, mines: mines };
+const canvas = document.getElementById('planeCanvas');
+const ctx = canvas.getContext('2d');
+function loop() {
+if (!planeActive) return;
+if (planeThrust) {
+planeState.vx = Math.min(3.2, planeState.vx + 0.08);
+planeState.vy = Math.max(-2.2, planeState.vy - 0.14);
+} else {
+planeState.vx = Math.max(0.8, planeState.vx - 0.04);
+planeState.vy = Math.min(2.4, planeState.vy + 0.08);
+}
+planeState.x += planeState.vx;
+planeState.y += planeState.vy;
+if (planeState.y < 18) {
+planeState.y = 18;
+planeState.vy = 0;
+}
+drawPlaneWorld(ctx, canvas, planeState.x, planeState.y, planeState.mines);
+for (let m of planeState.mines) {
+const dist = Math.hypot(planeState.x - m.x, planeState.y - m.y);
+if (dist < 16) {
+endPlaneGame(false, 0, '💥 Самолёт задел воздушную мину!');
+return;
+}
+}
+if (planeState.y >= canvas.height - 26) {
+let landedPlatform = null;
+for (let p of planePlatforms) {
+if (planeState.x >= p.x && planeState.x <= p.x + p.w) {
+landedPlatform = p;
+break;
+}
+}
+if (landedPlatform) {
+const win = Math.max(1, Math.round(planeBet * landedPlatform.mult));
+balance += win;
+updateBalanceUI();
+endPlaneGame(true, win, 🛬 Посадка на x${landedPlatform.mult}! Выигрыш: ${win} ⭐);
+} else {
+endPlaneGame(false, 0, '🌊 Промах мимо платформы!');
+}
+return;
+}
+if (planeState.x > canvas.width - 10) {
+endPlaneGame(false, 0, '💨 Вы перелетели все платформы!');
+return;
+}
+planeAnimId = requestAnimationFrame(loop);
+}
+planeAnimId = requestAnimationFrame(loop);
+}
+function endPlaneGame(isWin, winAmount, msg) {
+planeActive = false;
+planeThrust = false;
+cancelAnimationFrame(planeAnimId);
+document.getElementById('btn-plane-thrust').style.display = 'none';
+document.getElementById('btn-plane-start').style.display = 'block';
+const res = document.getElementById('res-plane');
+res.style.color = isWin ? 'var(--success)' : 'var(--danger)';
+res.innerText = msg;
+}
+// 2. КОРОВА НА ДОРОГЕ
+let cowActive = false;
+let cowAnimId = null;
+let cowBet = 0;
+let cowLane = 0;
+let cowCars = [];
+const cowMults = [1.0, 1.3, 1.7, 2.3, 3.2, 5.0];
+function drawCowStatic() {
+const canvas = document.getElementById('cowCanvas');
+const ctx = canvas.getContext('2d');
+drawCowWorld(ctx, canvas, 0, []);
+}
+function drawCowWorld(ctx, canvas, currentLane, cars) {
+const totalRows = 7;
+const rowH = canvas.height / totalRows;
+for (let r = 0; r < totalRows; r++) {
+if (r === 0) ctx.fillStyle = '#14532d';
+else if (r === 6) ctx.fillStyle = '#1e293b';
+else ctx.fillStyle = r % 2 === 0 ? '#18181b' : '#27272a';
+ctx.fillRect(0, r * rowH, canvas.width, rowH);
+if (r >= 1 && r <= 5) {
+ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+ctx.setLineDash();
+ctx.beginPath();
+ctx.moveTo(0, r * rowH);
+ctx.lineTo(canvas.width, r * rowH);
+ctx.stroke();
+ctx.setLineDash([]);
+const laneIdx = 6 - r;
+ctx.fillStyle = 'rgba(250, 204, 21, 0.45)';
+ctx.font = 'bold 11px sans-serif';
+ctx.textAlign = 'left';
+ctx.fillText('x' + cowMults[laneIdx].toFixed(1), 8, r * rowH + rowH / 2 + 4);
+}
+}
+ctx.fillStyle = '#4ade80';
+ctx.font = 'bold 12px sans-serif';
+ctx.textAlign = 'center';
+ctx.fillText('🏁 ФИНИШ (x5.0)', canvas.width / 2, rowH / 2 + 4);
+ctx.font = '22px sans-serif';
+ctx.textAlign = 'center';
+cars.forEach(car => {
+const y = (6 - car.lane) * rowH + rowH / 2 + 7;
+ctx.fillText(car.emoji, car.x, y);
+});
+const cowY = (6 - currentLane) * rowH + rowH / 2 + 8;
+ctx.font = '24px sans-serif';
+ctx.fillText('🐄', canvas.width / 2, cowY);
+}
+function startCowGame() {
+const bet = parseInt(document.getElementById('bet-cow').value);
+if (!checkBet(bet, 'res-cow')) return;
+balance -= bet;
+updateBalanceUI();
+cowBet = bet;
+cowLane = 0;
+cowActive = true;
+document.getElementById('res-cow').innerText = '';
+document.getElementById('btn-cow-start').style.display = 'none';
+document.getElementById('cow-play-controls').style.display = 'grid';
+document.getElementById('btn-cow-cashout').innerText = Забрать (${cowBet} ⭐);
+const emojis = ['🚕', '🚙', '🚚', '🏎️', '🚐'];
+cowCars = [];
+for (let lane = 1; lane <= 5; lane++) {
+const dir = lane % 2 === 0 ? 1 : -1;
+const speed = (1.2 + lane * 0.35) * dir;
+cowCars.push({ lane, x: Math.random() * 300, speed, emoji: emojis[lane - 1] });
+cowCars.push({ lane, x: (Math.random() * 300 + 170) % 340, speed, emoji: emojis[(lane + 1) % 5] });
+}
+const canvas = document.getElementById('cowCanvas');
+const ctx = canvas.getContext('2d');
+function loop() {
+if (!cowActive) return;
+cowCars.forEach(car => {
+car.x += car.speed;
+if (car.x > canvas.width + 20) car.x = -20;
+if (car.x < -20) car.x = canvas.width + 20;
+if (car.lane === cowLane && Math.abs(car.x - canvas.width / 2) < 22) {
+endCowGame(false, '💥 Корову сбила машина! Ставка сгорела.');
+}
+});
+if (cowActive) {
+drawCowWorld(ctx, canvas, cowLane, cowCars);
+cowAnimId = requestAnimationFrame(loop);
+}
+}
+cowAnimId = requestAnimationFrame(loop);
+}
+function stepCow() {
+if (!cowActive) return;
+cowLane++;
+const canvas = document.getElementById('cowCanvas');
+for (let car of cowCars) {
+if (car.lane === cowLane && Math.abs(car.x - canvas.width / 2) < 22) {
+drawCowWorld(canvas.getContext('2d'), canvas, cowLane, cowCars);
+endCowGame(false, '💥 Вы шагнули прямо под машину!');
+return;
+}
+}
+if (cowLane >= 6) {
+const win = Math.max(1, Math.round(cowBet * 5.0));
+balance += win;
+updateBalanceUI();
+drawCowWorld(canvas.getContext('2d'), canvas, cowLane, cowCars);
+endCowGame(true, 🎉 Корова перешла всю дорогу! Выигрыш: ${win} ⭐);
+return;
+}
+const currentMult = cowMults[cowLane];
+const potentialWin = Math.max(1, Math.round(cowBet * currentMult));
+document.getElementById('btn-cow-cashout').innerText = Забрать (${potentialWin} ⭐);
+}
+function cashoutCow() {
+if (!cowActive) return;
+const currentMult = cowMults[cowLane];
+const win = Math.max(1, Math.round(cowBet * currentMult));
+balance += win;
+updateBalanceUI();
+endCowGame(true, ✅ Вы забрали корову с дороги! Выигрыш: ${win} ⭐);
+}
+function endCowGame(isWin, msg) {
+cowActive = false;
+cancelAnimationFrame(cowAnimId);
+document.getElementById('cow-play-controls').style.display = 'none';
+document.getElementById('btn-cow-start').style.display = 'block';
+const res = document.getElementById('res-cow');
+res.style.color = isWin ? 'var(--success)' : 'var(--danger)';
+res.innerText = msg;
+}
+// 3. КЕЙСЫ
+function playCase(price, minWin, maxWin) {
+if (!checkBet(price, 'res-cases')) return;
+balance -= price;
+const win = Math.floor(Math.random() * (maxWin - minWin + 1)) + minWin;
+balance += win;
+updateBalanceUI();
+const res = document.getElementById('res-cases');
+res.style.color = win >= price ? 'var(--success)' : 'var(--accent)';
+res.innerText = Выпал приз на ${win} ⭐!;
+}
+// 4. РАКЕТКА
+let crashRunning = false;
+let crashInterval = null;
+let currentMult = 1.00;
+let crashPoint = 1.00;
+let currentCrashBet = 0;
+function toggleCrash() {
+const btn = document.getElementById('btn-crash');
+const res = document.getElementById('res-crash');
+const status = document.getElementById('crashStatus');
+const multEl = document.getElementById('crashMult');
+if (!crashRunning) {
+const bet = parseInt(document.getElementById('bet-crash').value);
+if (!checkBet(bet, 'res-crash')) return;
+balance -= bet;
+updateBalanceUI();
+currentCrashBet = bet;
+crashRunning = true;
+currentMult = 1.00;
+crashPoint = (Math.random() < 0.2) ? 1.00 : (1 + Math.random() * 4).toFixed(2);
+res.innerText = '';
+status.innerText = 'Ракета летит...';
+btn.innerText = 'Забрать выигрыш';
+btn.style.background = 'var(--success)';
+btn.style.color = '#fff';
+crashInterval = setInterval(() => {
+currentMult = +(currentMult + 0.05).toFixed(2);
+multEl.innerText = currentMult.toFixed(2) + 'x';
+if (currentMult >= crashPoint) {
+clearInterval(crashInterval);
+crashRunning = false;
+status.innerText = '💥 Взрыв на ' + currentMult.toFixed(2) + 'x!';
+res.style.color = 'var(--danger)';
+res.innerText = 'Вы не успели забрать!';
+btn.innerText = 'Запустить ракету';
+btn.style.background = 'var(--accent)';
+btn.style.color = '#000';
+}
+}, 120);
+} else {
+clearInterval(crashInterval);
+crashRunning = false;
+const win = Math.max(1, Math.round(currentCrashBet * currentMult));
+balance += win;
+updateBalanceUI();
+status.innerText = 'Успешный выход!';
+res.style.color = 'var(--success)';
+res.innerText = Вы забрали ${win} ⭐ (${currentMult.toFixed(2)}x)!;
+btn.innerText = 'Запустить ракету';
+btn.style.background = 'var(--accent)';
+btn.style.color = '#000';
+}
+}
+// 5. МИНЫ
+let minesActive = false;
+let minePositions = [];
+let minesBet = 0;
+let minesMultiplier = 1.0;
+function renderEmptyMines() {
+const grid = document.getElementById('minesGrid');
+grid.innerHTML = '';
+for (let i = 0; i < 25; i++) {
+const cell = document.createElement('div');
+cell.className = 'mine-cell';
+cell.innerText = '?';
+grid.appendChild(cell);
+}
+}
+function startMines() {
+const btn = document.getElementById('btn-mines');
+const res = document.getElementById('res-mines');
+if (minesActive) {
+const win = Math.max(1, Math.round(minesBet * minesMultiplier));
+balance += win;
+updateBalanceUI();
+minesActive = false;
+res.style.color = 'var(--success)';
+res.innerText = Вы забрали ${win} ⭐!;
+btn.innerText = 'Начать игру';
+return;
+}
+const bet = parseInt(document.getElementById('bet-mines').value);
+if (!checkBet(bet, 'res-mines')) return;
+balance -= bet;
+updateBalanceUI();
+minesBet = bet;
+minesMultiplier = 1.0;
+minesActive = true;
+res.innerText = 'Открывайте клетки!';
+res.style.color = '#fff';
+btn.innerText = Забрать (${minesBet} ⭐);
+minePositions = [];
+while (minePositions.length < 5) {
+let r = Math.floor(Math.random() * 25);
+if (!minePositions.includes(r)) minePositions.push(r);
+}
+const grid = document.getElementById('minesGrid');
+grid.innerHTML = '';
+for (let i = 0; i < 25; i++) {
+const cell = document.createElement('div');
+cell.className = 'mine-cell';
+cell.onclick = () => clickMineCell(i, cell);
+grid.appendChild(cell);
+}
+}
+function clickMineCell(idx, cellEl) {
+if (!minesActive || cellEl.classList.contains('safe')) return;
+const btn = document.getElementById('btn-mines');
+const res = document.getElementById('res-mines');
+if (minePositions.includes(idx)) {
+cellEl.classList.add('bomb');
+cellEl.innerText = '💣';
+minesActive = false;
+res.style.color = 'var(--danger)';
+res.innerText = 'Бум! Вы попали на мину.';
+btn.innerText = 'Начать игру';
+} else {
+cellEl.classList.add('safe');
+cellEl.innerText = '💎';
+minesMultiplier = +(minesMultiplier + 0.3).toFixed(2);
+const potentialWin = Math.max(1, Math.round(minesBet * minesMultiplier));
+btn.innerText = Забрать (${potentialWin} ⭐);
+}
+}
+// 6. АПГРЕЙД
+function playUpgrade(mult, chance) {
+const bet = parseInt(document.getElementById('bet-upgrade').value);
+if (!checkBet(bet, 'res-upgrade')) return;
+balance -= bet;
+const roll = Math.random() * 100;
+const res = document.getElementById('res-upgrade');
+if (roll <= chance) {
+const win = Math.max(1, Math.round(bet * mult));
+balance += win;
+res.style.color = 'var(--success)';
+res.innerText = Успех! Вы выиграли ${win} ⭐ (x${mult});
+} else {
+res.style.color = 'var(--danger)';
+res.innerText = Неудача! Выпало ${roll.toFixed(1)}%;
+}
+updateBalanceUI();
+}
+// 7. ПЛИНКО
+function playPlinko() {
+const bet = parseInt(document.getElementById('bet-plinko').value);
+if (!checkBet(bet, 'res-plinko')) return;
+balance -= bet;
+const slots = [5, 2, 1.2, 0.5, 0.2, 0.5, 1.2, 2, 5];
+const weights =;
+const totalWeight = weights.reduce((a, b) => a + b, 0);
+let rand = Math.random() * totalWeight;
+let chosenMult = 0.5;
+for (let i = 0; i < slots.length; i++) {
+if (rand < weights[i]) {
+chosenMult = slots[i];
+break;
+}
+rand -= weights[i];
+}
+const win = Math.round(bet * chosenMult);
+balance += win;
+updateBalanceUI();
+const res = document.getElementById('res-plinko');
+res.style.color = chosenMult >= 1 ? 'var(--success)' : 'var(--accent)';
+res.innerText = Шарик упал в лунку x${chosenMult}! Выигрыш: ${win} ⭐;
+}
+// 8. РУЛЕТКА
+function playRoulette(choice) {
+const bet = parseInt(document.getElementById('bet-roulette').value);
+if (!checkBet(bet, 'res-roulette')) return;
+balance -= bet;
+const roll = Math.floor(Math.random() * 15);
+let outcome = 'green';
+if (roll >= 1 && roll <= 7) outcome = 'red';
+if (roll >= 8) outcome = 'black';
+const res = document.getElementById('res-roulette');
+const names = { red: 'Красное', black: 'Черное', green: 'Зеро' };
+if (choice === outcome) {
+const mult = outcome === 'green' ? 14 : 2;
+const win = bet * mult;
+balance += win;
+res.style.color = 'var(--success)';
+res.innerText = Выпало ${names[outcome]}! Выигрыш: ${win} ⭐;
+} else {
+res.style.color = 'var(--danger)';
+res.innerText = Выпало ${names[outcome]}. Ставка не сыграла.;
+}
+updateBalanceUI();
+}
+// 9. АРЕНА
+function playArena() {
+const bet = parseInt(document.getElementById('bet-arena').value);
+if (!checkBet(bet, 'res-arena')) return;
+balance -= bet;
+const roll = +(Math.random() * 100).toFixed(2);
+const res = document.getElementById('res-arena');
+if (roll < 50.00) {
+const win = bet * 2;
+balance += win;
+res.style.color = 'var(--success)';
+res.innerText = Выпало ${roll}! Победа: +${win} ⭐;
+} else {
+res.style.color = 'var(--danger)';
+res.innerText = Выпало ${roll}. Поражение.;
+}
+updateBalanceUI();
+}
